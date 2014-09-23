@@ -1,0 +1,13 @@
+{
+  "method": "POST",
+  "mode": "SYNC",
+  "format": "JSON",
+  "url": "https://api.hipchat.com/v2/room/online4m.com/notification?auth_token=v54gzlKPiiEEKw6wgbR3waiQklj2lIoCOjVKOeDl",
+  "data": {
+    "message": "My test message"
+  }
+}
+
+
+// API v2
+// auth_token=v54gzlKPiiEEKw6wgbR3waiQklj2lIoCOjVKOeDl

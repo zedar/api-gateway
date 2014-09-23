@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="online4m.apigateway.si.test.RestGetApiTest" tests="5" skipped="0" failures="1" errors="0" timestamp="2014-09-23T21:31:26" hostname="MacBook-Pro-Robert.local" time="5.064">
+  <properties/>
+  <testcase name="Missing REQUIRED: method" classname="online4m.apigateway.si.test.RestGetApiTest" time="3.172"/>
+  <testcase name="Missing REQUIRED: method, mode, format, url" classname="online4m.apigateway.si.test.RestGetApiTest" time="0.302"/>
+  <testcase name="Wrong INPUT: data format" classname="online4m.apigateway.si.test.RestGetApiTest" time="0.286">
+    <failure message="Condition not satisfied:&#10;&#10;errorCode == &quot;SI_EXCEPTION&quot;&#10;|         |&#10;|         false&#10;|         16 differences (30% similarity)&#10;|         SI_EX(P_ILL)E(GAL_ARGUME)N(T)&#10;|         SI_EX(C----)E(PTIO------)N(-)&#10;SI_EXP_ILLEGAL_ARGUMENT&#10;" type="org.spockframework.runtime.SpockComparisonFailure">Condition not satisfied:
+
+errorCode == &quot;SI_EXCEPTION&quot;
+|         |
+|         false
+|         16 differences (30% similarity)
+|         SI_EX(P_ILL)E(GAL_ARGUME)N(T)
+|         SI_EX(C----)E(PTIO------)N(-)
+SI_EXP_ILLEGAL_ARGUMENT
+
+	at online4m.apigateway.si.test.RestGetApiTest.Wrong INPUT: data format_closure6(RestGetApiTest.groovy:86)
+	at groovy.lang.Closure.call(Closure.java:423)
+	at spock.lang.Specification.with(Specification.java:139)
+	at online4m.apigateway.si.test.RestGetApiTest.Wrong INPUT: data format(RestGetApiTest.groovy:84)
+</failure>
+  </testcase>
+  <testcase name="Wrong INPUT: invocation method" classname="online4m.apigateway.si.test.RestGetApiTest" time="0.296"/>
+  <testcase name="Success: GET SYNC JSON" classname="online4m.apigateway.si.test.RestGetApiTest" time="1.008"/>
+  <system-out><![CDATA[23:31:29.886 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+23:31:29.888 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+23:31:29.888 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:58242]
+23:31:29.888 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+23:31:29.889 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [75]
+23:31:30.000 [ratpack-blocking-3-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+23:31:30.002 [ratpack-blocking-3-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [format:JSON, mode:SYNC, url:http://localhost:4545/get_sync_json]
+23:31:30.016 [ratpack-blocking-3-1] DEBUG online4m.apigateway.si.CallerService - MISSING ATTRS: [method]
+23:31:30.364 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+23:31:30.364 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+23:31:30.365 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:58244]
+23:31:30.365 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+23:31:30.368 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [2]
+23:31:30.372 [ratpack-blocking-8-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+23:31:30.373 [ratpack-blocking-8-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [:]
+23:31:30.374 [ratpack-blocking-8-1] DEBUG online4m.apigateway.si.CallerService - MISSING ATTRS: [method, mode, format, url]
+23:31:30.611 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+23:31:30.611 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+23:31:30.612 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:58246]
+23:31:30.612 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+23:31:30.612 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [2]
+23:31:30.616 [ratpack-blocking-12-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class java.util.ArrayList
+23:31:30.616 [ratpack-blocking-12-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: []
+23:31:30.906 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+23:31:30.906 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+23:31:30.906 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:58248]
+23:31:30.906 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+23:31:30.906 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [91]
+23:31:30.909 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+23:31:30.910 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [format:JSON, method:GET2, mode:SYNC, url:http://localhost:4545/get_sync_json]
+23:31:31.184 [ratpack-compute-19-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+23:31:31.184 [ratpack-compute-19-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+23:31:31.184 [ratpack-compute-19-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:58250]
+23:31:31.184 [ratpack-compute-19-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+23:31:31.185 [ratpack-compute-19-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [172]
+23:31:31.188 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+23:31:31.188 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [data:[req_attr1:alpha, req_attr2:beta, req_attr3:[req_attr3_1:3_1]], format:JSON, method:GET, mode:SYNC, url:http://localhost:4545/get_sync_json]
+23:31:31.232 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - REQUEST: online4m.apigateway.si.Request(GET, SYNC, JSON, http://localhost:4545/get_sync_json, [req_attr1:alpha, req_attr2:beta, req_attr3:[req_attr3_1:3_1]])
+23:31:31.385 [ratpack-blocking-20-1] WARN  online4m.apigateway.si.CallerService - SKIPPING: key=req_attr3, value=[req_attr3_1:3_1]
+23:31:31.391 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - URI QUERY: [req_attr1:alpha, req_attr2:beta]
+23:31:31.959 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - SUCCESS: STATUSCODE=200, json=[resp_attr1:beta, resp_attr2:alpha, resp_attr3:[resp_attr3_1:3_1]]
+23:31:31.964 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - RESP JSON class: class net.sf.json.JSONObject
+23:31:31.971 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - RESPONSE: online4m.apigateway.si.Response(true, 0, , [resp_attr1:beta, resp_attr2:alpha, resp_attr3:[resp_attr3_1:3_1]])
+23:31:31.972 [ratpack-blocking-20-1] DEBUG online4m.apigateway.si.CallerService - RESULT DATA: online4m.apigateway.si.Response(true, 0, , [resp_attr1:beta, resp_attr2:alpha, resp_attr3:[resp_attr3_1:3_1]])
+]]></system-out>
+  <system-err><![CDATA[java.lang.IllegalArgumentException: wrong number of arguments
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at org.codehaus.groovy.runtime.metaclass.TransformMetaMethod.invoke(TransformMetaMethod.java:55)
+	at groovy.lang.MetaClassImpl$3.invoke(MetaClassImpl.java:1224)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1207)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1016)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaClassSite.callCurrent(PogoMetaClassSite.java:66)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:49)
+	at online4m.apigateway.si.CallerService$validate$0.callCurrent(Unknown Source)
+	at online4m.apigateway.si.CallerService.invoke(CallerService.groovy:24)
+	at online4m.apigateway.si.CallerService$invoke.call(Unknown Source)
+	at online4m.apigateway.si.CallerServiceAsync$_invokeRx_closure2.doCall(CallerServiceAsync.groovy:32)
+	at online4m.apigateway.si.CallerServiceAsync$_invokeRx_closure2.doCall(CallerServiceAsync.groovy)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:278)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1016)
+	at groovy.lang.Closure.call(Closure.java:423)
+	at groovy.lang.Closure.call(Closure.java:417)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation$1.execute(DefaultExecControl.java:95)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation$1.execute(DefaultExecControl.java:91)
+	at ratpack.exec.internal.ExecutionBacking$3.performOperation(ExecutionBacking.java:174)
+	at ratpack.handling.internal.InterceptedOperation.nextInterceptor(InterceptedOperation.java:77)
+	at ratpack.handling.internal.InterceptedOperation.access$100(InterceptedOperation.java:26)
+	at ratpack.handling.internal.InterceptedOperation$1.run(InterceptedOperation.java:61)
+	at ratpack.codahale.metrics.internal.BlockingExecTimingInterceptor.intercept(BlockingExecTimingInterceptor.java:39)
+	at ratpack.handling.internal.InterceptedOperation.nextInterceptor(InterceptedOperation.java:68)
+	at ratpack.handling.internal.InterceptedOperation.run(InterceptedOperation.java:45)
+	at ratpack.exec.internal.ExecutionBacking.intercept(ExecutionBacking.java:171)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation.call(DefaultExecControl.java:91)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at ratpack.exec.internal.DefaultExecController$ExecControllerBindingThreadFactory$1.run(DefaultExecController.java:90)
+	at java.lang.Thread.run(Thread.java:745)
+java.lang.IllegalArgumentException: No enum constant online4m.apigateway.si.RequestMethod.GET2
+	at java.lang.Enum.valueOf(Enum.java:238)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at groovy.lang.MetaClassImpl.invokeStaticMethod(MetaClassImpl.java:1461)
+	at org.codehaus.groovy.runtime.callsite.StaticMetaClassSite.callStatic(StaticMetaClassSite.java:62)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallStatic(CallSiteArray.java:53)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callStatic(AbstractCallSite.java:157)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.callStatic(AbstractCallSite.java:169)
+	at online4m.apigateway.si.RequestMethod.valueOf(Request.groovy)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at groovy.lang.MetaClassImpl.invokeStaticMethod(MetaClassImpl.java:1440)
+	at org.codehaus.groovy.runtime.InvokerHelper.invokeMethod(InvokerHelper.java:875)
+	at org.codehaus.groovy.runtime.StringGroovyMethods.asType(StringGroovyMethods.java:212)
+	at org.codehaus.groovy.runtime.dgm$898.doMethodInvoke(Unknown Source)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1207)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1016)
+	at org.codehaus.groovy.runtime.InvokerHelper.invokePojoMethod(InvokerHelper.java:889)
+	at org.codehaus.groovy.runtime.InvokerHelper.invokeMethod(InvokerHelper.java:880)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.invokeMethodN(ScriptBytecodeAdapter.java:164)
+	at org.codehaus.groovy.runtime.ScriptBytecodeAdapter.asType(ScriptBytecodeAdapter.java:587)
+	at online4m.apigateway.si.Request.build(Request.groovy:28)
+	at online4m.apigateway.si.Request$build.call(Unknown Source)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:45)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:108)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:116)
+	at online4m.apigateway.si.CallerService.invoke(CallerService.groovy:26)
+	at online4m.apigateway.si.CallerService$invoke.call(Unknown Source)
+	at online4m.apigateway.si.CallerServiceAsync$_invokeRx_closure2.doCall(CallerServiceAsync.groovy:32)
+	at online4m.apigateway.si.CallerServiceAsync$_invokeRx_closure2.doCall(CallerServiceAsync.groovy)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:278)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1016)
+	at groovy.lang.Closure.call(Closure.java:423)
+	at groovy.lang.Closure.call(Closure.java:417)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation$1.execute(DefaultExecControl.java:95)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation$1.execute(DefaultExecControl.java:91)
+	at ratpack.exec.internal.ExecutionBacking$3.performOperation(ExecutionBacking.java:174)
+	at ratpack.handling.internal.InterceptedOperation.nextInterceptor(InterceptedOperation.java:77)
+	at ratpack.handling.internal.InterceptedOperation.access$100(InterceptedOperation.java:26)
+	at ratpack.handling.internal.InterceptedOperation$1.run(InterceptedOperation.java:61)
+	at ratpack.codahale.metrics.internal.BlockingExecTimingInterceptor.intercept(BlockingExecTimingInterceptor.java:39)
+	at ratpack.handling.internal.InterceptedOperation.nextInterceptor(InterceptedOperation.java:68)
+	at ratpack.handling.internal.InterceptedOperation.run(InterceptedOperation.java:45)
+	at ratpack.exec.internal.ExecutionBacking.intercept(ExecutionBacking.java:171)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation.call(DefaultExecControl.java:91)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at ratpack.exec.internal.DefaultExecController$ExecControllerBindingThreadFactory$1.run(DefaultExecController.java:90)
+	at java.lang.Thread.run(Thread.java:745)
+]]></system-err>
+</testsuite>

@@ -1,0 +1,159 @@
+import groovy.json.JsonSlurper
+
+buildscript {
+  repositories {
+    maven { url "http://oss.jfrog.org/artifactory/repo" }
+    jcenter()
+  }
+  dependencies {
+    classpath "io.ratpack:ratpack-gradle:0.9.8"
+    classpath 'com.bluepapa32:gradle-watch-plugin:0.1.3'
+  }
+}
+
+apply plugin: "io.ratpack.ratpack-groovy"
+apply plugin: "idea"
+apply plugin: "eclipse"
+apply plugin: "watch"
+
+repositories {
+  maven { url "http://oss.jfrog.org/artifactory/repo" }
+  jcenter()
+  maven { url "http://repo.springsource.org/repo" } // for springloaded
+}
+
+dependencies {
+  // SpringLoaded enables runtime hot reloading.
+  // It is not part of the app runtime and is not shipped in the distribution.
+  springloaded "org.springframework:springloaded:1.2.0.RELEASE"
+
+  // Add monitoring 
+  compile ratpack.dependency("codahale-metrics")
+  // Add RxJava - async operations
+  compile ratpack.dependency("rx")
+
+  // Default SLF4J binding.  Note that this is a blocking implementation.
+  // See here for a non blocking appender http://logging.apache.org/log4j/2.x/manual/async.html
+  //runtime 'org.slf4j:slf4j-simple:1.7.7'
+  // Added async logging - log4j2 became async logger
+  runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.0.2'
+  runtime 'org.apache.logging.log4j:log4j-api:2.0.2'
+  runtime 'org.apache.logging.log4j:log4j-core:2.0.2'
+
+  // Add HTTPBuilder dependency
+  compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.5.0-RC2'
+
+  testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
+  testCompile ratpack.dependency("remote-test")
+}
+
+watch {
+  println "WATCH STARTED"
+  groovy {
+    println "GROOVY WATCH"
+    files fileTree(dir: "src/main/groovy", include: "**/*.groovy")
+    tasks "classes"
+  }
+}
+
+run {
+  // change port for ratpack webserver
+  //jvmArgs "-Dratpack.port=8080"
+
+  // set JMX attributes for jvm process running ratpack application
+  jvmArgs "-Dcom.sun.management.jmxremote"
+  jvmArgs "-Dcom.sun.management.jmxremote.port=5999"
+  jvmArgs "-Dcom.sun.management.jmxremote.local.only=false"
+  jvmArgs "-Dcom.sun.management.jmxremote.authenticate=false"
+  jvmArgs "-Dcom.sun.management.jmxremote.ssl=false"
+  jvmArgs "-Dcom.sun.management.jmxremote.rmi.port=5998"
+}
+
+installApp {
+  // set JVM options for ratpack app distribution
+  applicationDefaultJvmArgs = [
+    "-Dcom.sun.management.jmxremote",
+    "-Dcom.sun.management.jmxremote.port=5999",
+    "-Dcom.sun.management.jmxremote.local.only=false",
+    "-Dcom.sun.management.jmxremote.authenticate=false",
+    "-Dcom.sun.management.jmxremote.ssl=false",
+    "-Dcom.sun.management.jmxremote.rmi.port=5998"
+  ]
+}
+
+task startMounteBank(type: ExecWait) {
+  command "mb"
+  ready "point your browser to http://localhost:2525"
+  directory "."
+}
+
+task initMounteBank(dependsOn: "startMounteBank") << {
+  def p = ["curl", "-X", "POST", "-H", "\"Content-Type: application/json\"", "-d@./src/test/groovy/online4m/apigateway/si/test/imposter.json", "http://localhost:2525/imposters"].execute()
+  p.waitFor()
+  println "curl return code: ${p.exitValue()}"
+  println "process: ${p.text}"
+  def json = new JsonSlurper().parseText(p.in.text)
+  println json
+}
+
+
+task initMounteBankStubs(dependsOn: "startMounteBank", type: ExecWait) {
+  command "curl -X POST -d@./src/test/groovy/online4m/apigateway/si/test/imposter.json http://localhost:2525/imposters"
+  //command 'curl -X POST -d {"port":4545,"protocol":"http"}  http://localhost:2525/imposters'
+  directory "."
+  logOutput true
+}
+
+
+/**
+ *  Task for running external tool and waiting for it.
+ *  http://fbflex.wordpress.com/2013/03/14/gradle-madness-execwait-a-task-that-waits-for-commandline-calls-to-be-ready/#comments
+ */
+class ExecWait extends DefaultTask {
+  String command
+  String ready
+  String directory
+  Boolean logOutput = false
+
+  @TaskAction def spawnProcess() {
+    ProcessBuilder builder = new ProcessBuilder(command.split(" "))
+    builder.redirectErrorStream(true)
+    builder.directory(new File(directory))
+    Process process = builder.start()
+
+    InputStream stdout = process.getInputStream()
+    BufferedReader reader = new BufferedReader(new InputStreamReader(stdout))
+
+    if (ready || logOutput) {
+      println " === OUTPUT"
+      def line 
+      while((line = reader.readLine()) != null) {
+        println line
+        if (ready && line.contains(ready)) {
+          println "$command is ready"
+          break
+        }
+      }
+      println " ==="
+    }
+  }
+}
+
+/**
+ *  Add listener to kill spawned processes
+ */
+task freePorts << {
+  println "FREE PORTS"
+  def ports = [2525]
+  ports.each { port ->
+    def cmd = "lsof -Fp -i :$port"
+    def process = cmd.execute()
+    process.in.eachLine { line -> 
+      def killProcess = "kill -9 ${line.substring(1)}".execute()
+      killProcess.waitFor()
+    }
+  }
+}
+
+test.dependsOn initMounteBankStubs
+test.finalizedBy freePorts

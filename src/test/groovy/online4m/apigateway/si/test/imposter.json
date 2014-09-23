@@ -1,0 +1,31 @@
+{
+  "port": 4545,
+  "protocol": "http",
+  "stubs": [
+    {
+      "responses": [
+        {
+          "is": {
+            "statusCode": "200",
+            "headers" : {
+              "Content-Type": "application/json"
+            },
+            "body": "{\"resp_attr1\": \"beta\", \"resp_attr2\": \"alpha\", \"resp_attr3\": {\"resp_attr3_1\": \"3_1\"}}"
+          }
+        }
+      ],
+      "predicates": [
+        {
+          "equals": {
+            "method": "GET",
+            "path": "/get_sync_json",
+            "query": {
+              "req_attr1": "alpha",
+              "req_attr2": "beta"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

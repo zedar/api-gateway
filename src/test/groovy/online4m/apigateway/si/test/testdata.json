@@ -1,0 +1,1 @@
+{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "http://api.openweathermap.org/data/2.5/weather", "data": {"q": "Warsaw"}}

@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Test results - Class online4m.apigateway.si.test.RestApiTest</title>
+<link href="css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="css/style.css" rel="stylesheet" type="text/css"/>
+<script src="js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>Class online4m.apigateway.si.test.RestApiTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/online4m.apigateway.si.test.html">online4m.apigateway.si.test</a> &gt; RestApiTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">4</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">4.530s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+<li>
+<a href="#tab2">Standard error</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">Missing REQUIRED: method</td>
+<td>3.038s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Missing REQUIRED: method, mode, format, url</td>
+<td>0.276s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Success: GET SYNC JSON</td>
+<td>1.004s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Wrong INPUT data format</td>
+<td>0.212s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>22:36:15.143 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+22:36:15.145 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+22:36:15.146 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:57703]
+22:36:15.146 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+22:36:15.146 [ratpack-compute-1-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [75]
+22:36:15.246 [ratpack-blocking-3-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+22:36:15.248 [ratpack-blocking-3-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [format:JSON, mode:SYNC, url:http://localhost:4545/get_sync_json]
+22:36:15.279 [ratpack-blocking-3-1] DEBUG online4m.apigateway.si.CallerService - MISSING ATTRS: [method]
+22:36:15.586 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+22:36:15.586 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+22:36:15.586 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:57705]
+22:36:15.587 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+22:36:15.590 [ratpack-compute-7-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [2]
+22:36:15.593 [ratpack-blocking-8-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+22:36:15.594 [ratpack-blocking-8-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [:]
+22:36:15.594 [ratpack-blocking-8-1] DEBUG online4m.apigateway.si.CallerService - MISSING ATTRS: [method, mode, format, url]
+22:36:15.800 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+22:36:15.801 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+22:36:15.801 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:57707]
+22:36:15.802 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+22:36:15.802 [ratpack-compute-11-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [2]
+22:36:15.808 [ratpack-blocking-12-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class java.util.ArrayList
+22:36:15.809 [ratpack-blocking-12-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: []
+22:36:16.018 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Content-Type, VALUES: [application/json]
+22:36:16.018 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Cookie, VALUES: []
+22:36:16.019 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Host, VALUES: [localhost:57709]
+22:36:16.019 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Connection, VALUES: [close]
+22:36:16.019 [ratpack-compute-15-2] DEBUG Ratpack - HEADER Content-Length, VALUES: [172]
+22:36:16.022 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA TYPE: class groovy.json.internal.LazyMap
+22:36:16.022 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - INPUT DATA: [data:[req_attr1:alpha, req_attr2:beta, req_attr3:[req_attr3_1:3_1]], format:JSON, method:GET, mode:SYNC, url:http://localhost:4545/get_sync_json]
+22:36:16.099 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - REQUEST: online4m.apigateway.si.Request(GET, SYNC, JSON, http://localhost:4545/get_sync_json, [req_attr1:alpha, req_attr2:beta, req_attr3:[req_attr3_1:3_1]])
+22:36:16.256 [ratpack-blocking-16-1] WARN  online4m.apigateway.si.CallerService - SKIPPING: key=req_attr3, value=[req_attr3_1:3_1]
+22:36:16.262 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - URI QUERY: [req_attr1:alpha, req_attr2:beta]
+22:36:16.808 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - SUCCESS: STATUSCODE=200, json=[resp_attr1:beta, resp_attr2:alpha, resp_attr3:[resp_attr3_1:3_1]]
+22:36:16.814 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - RESP JSON class: class net.sf.json.JSONObject
+22:36:16.822 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - RESPONSE: online4m.apigateway.si.Response(true, 0, , [resp_attr1:beta, resp_attr2:alpha, resp_attr3:[resp_attr3_1:3_1]])
+22:36:16.822 [ratpack-blocking-16-1] DEBUG online4m.apigateway.si.CallerService - RESULT DATA: online4m.apigateway.si.Response(true, 0, , [resp_attr1:beta, resp_attr2:alpha, resp_attr3:[resp_attr3_1:3_1]])
+</pre>
+</span>
+</div>
+<div id="tab2" class="tab">
+<h2>Standard error</h2>
+<span class="code">
+<pre>java.lang.IllegalArgumentException: wrong number of arguments
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at org.codehaus.groovy.runtime.metaclass.TransformMetaMethod.invoke(TransformMetaMethod.java:55)
+	at groovy.lang.MetaClassImpl$3.invoke(MetaClassImpl.java:1224)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1207)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1016)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaClassSite.callCurrent(PogoMetaClassSite.java:66)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCallCurrent(CallSiteArray.java:49)
+	at online4m.apigateway.si.CallerService$validate$0.callCurrent(Unknown Source)
+	at online4m.apigateway.si.CallerService.invoke(CallerService.groovy:24)
+	at online4m.apigateway.si.CallerService$invoke.call(Unknown Source)
+	at online4m.apigateway.si.CallerServiceAsync$_invokeRx_closure2.doCall(CallerServiceAsync.groovy:32)
+	at online4m.apigateway.si.CallerServiceAsync$_invokeRx_closure2.doCall(CallerServiceAsync.groovy)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:90)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:324)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:278)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1016)
+	at groovy.lang.Closure.call(Closure.java:423)
+	at groovy.lang.Closure.call(Closure.java:417)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation$1.execute(DefaultExecControl.java:95)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation$1.execute(DefaultExecControl.java:91)
+	at ratpack.exec.internal.ExecutionBacking$3.performOperation(ExecutionBacking.java:174)
+	at ratpack.handling.internal.InterceptedOperation.nextInterceptor(InterceptedOperation.java:77)
+	at ratpack.handling.internal.InterceptedOperation.access$100(InterceptedOperation.java:26)
+	at ratpack.handling.internal.InterceptedOperation$1.run(InterceptedOperation.java:61)
+	at ratpack.codahale.metrics.internal.BlockingExecTimingInterceptor.intercept(BlockingExecTimingInterceptor.java:39)
+	at ratpack.handling.internal.InterceptedOperation.nextInterceptor(InterceptedOperation.java:68)
+	at ratpack.handling.internal.InterceptedOperation.run(InterceptedOperation.java:45)
+	at ratpack.exec.internal.ExecutionBacking.intercept(ExecutionBacking.java:171)
+	at ratpack.exec.internal.DefaultExecControl$2$BlockingOperation.call(DefaultExecControl.java:91)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at ratpack.exec.internal.DefaultExecController$ExecControllerBindingThreadFactory$1.run(DefaultExecController.java:90)
+	at java.lang.Thread.run(Thread.java:745)
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>Generated by 
+<a href="http://www.gradle.org">Gradle 2.0</a> at 2014-09-23 22:36:27</p>
+</div>
+</div>
+</body>
