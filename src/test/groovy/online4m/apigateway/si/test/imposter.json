@@ -26,6 +26,19 @@
           }
         }
       ]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "204"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "POST",
+          "path": "/empty_post_response"
+        }
+      }]
     }
   ]
 }

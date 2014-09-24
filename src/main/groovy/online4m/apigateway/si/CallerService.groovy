@@ -158,6 +158,8 @@ class CallerService {
       body = inputData
       
       response.success = { resp, json ->
+        log.debug("POST RESPONSE CODE: ${resp.statusLine}")
+        log.debug("POST RESPONSE SUCCESS: ${json}")
         Map jsonMap = json
         Response r = new Response()
         r.with {
@@ -167,6 +169,7 @@ class CallerService {
       }
 
       response.failure = { resp -> 
+        log.debug("POST RESPONSE FAILURE")
         Response r = new Response()
         r.with {
           (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
