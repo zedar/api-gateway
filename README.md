@@ -54,9 +54,51 @@ Run health check defined by the given :name.
 
 **Method:** GET
 
-Supported health checks: 
+Run all health checks: 
 
 * online4m_api_gateway_caller_service_health_check
+
+# Run Tests
+
+## Prerequisites
+
+Unit tests use stubs provided by [mountebank](http://www.mbtest.org) - really nice and practical framework.
+
+In order to make them working install node.js together with npm package manager. I recommend to use [Node version manager](https://github.com/creationix/nvm).
+
+    $ curl https://raw.githubusercontent.com/creationix/nvm/v0.17.0/install.sh | bash
+    $ nvm install v0.11.8
+    $ curl https://www.npmjs.org/install.sh | sh
+
+Install mountebank globally:
+
+    $ npm install -g mountebank --production
+
+After that mountebank server should be available with command:
+
+    $ mb
+
+## Running tests
+
+Please look at each groovy class from test folder. 
+Some of them, especially for functional testing with some real services, are annotated with @Ignore annotation (feature of [Spock](https://code.google.com/p/spock/) BDD testing framework).
+Remove or comment it in order to run them while testing.
+
+Run tests with command:
+
+    $ ./gradlew test
+
+The *test* task automatically runs *mountebank* server in the background. Posts stubs configuration.
+
+When *test* is finished it is finalized with closing *mountebank* server.
+
+Following tasks from *build.gradle* do the job:
+
+    startMounteBank - start mountebank server with *mb* shell command
+    initMounteBank  - initialize stubs configuration with *./src/test/groovy/online4m/apigateway/si/test/imposter.json* file.
+    testFinished    - kill spwaned processes attached to mountebank ports
+
+# Project structure
 
 In this project you get:
 
