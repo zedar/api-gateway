@@ -1,4 +1,4 @@
-mb.log
+**/*.log
 build
-mb.pid
+**/*.pid
 .gradle

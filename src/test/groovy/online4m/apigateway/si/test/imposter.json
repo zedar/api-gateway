@@ -39,6 +39,84 @@
           "path": "/empty_post_response"
         }
       }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "201",
+          "headers": {
+            "Location": "http://localhost:4545/get_sync_json",
+            "Content-Type": "application/json"
+          },
+          "body": "{\"id\": \"1\"}"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "POST",
+          "path": "/post_sync_json"
+        }
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "201",
+          "headers": {
+            "Content-Type": "application/xml"
+          },
+          "body": "<customer><id>101</id><id>102</id></customer>"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "POST",
+          "path": "/post_xml"
+        }
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "201",
+          "headers": {
+            "Content-Type": "application/xml"
+          },
+          "body": "<customer><address><street>Alpha</street></address></customer>"
+        }
+      }],
+      "predicates": [{
+        "and": [
+          {
+            "equals": {
+              "method": "POST",
+              "path": "/post_xml_2"
+            }
+          },
+          {
+            "matches": {
+              "body": "^<customer><ids><id>1</id><id>2</id></ids></customer>"
+            }
+          }
+        ]
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "200",
+          "headers": {
+            "Content-Type": "application/xml"
+          },
+          "body": "<customer><address><street>Beta</street></address></customer>"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "GET",
+          "path": "/get_xml"
+        }
+      }]
     }
   ]
 }

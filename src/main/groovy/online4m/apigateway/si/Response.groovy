@@ -8,5 +8,5 @@ class Response {
   Boolean success = true
   String  errorCode = "0"
   String  errorDescr = ""
-  Map     data
+  Object  data
 }

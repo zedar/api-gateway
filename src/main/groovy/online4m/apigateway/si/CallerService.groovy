@@ -69,6 +69,12 @@ class CallerService {
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
       return invoke_PostJson(request.url, request.data)
     }
+    else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
+      return getXml(request.url, request.data)
+    }
+    else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
+      return postXml(request.url, request.data)
+    }
     else {
       Response resp = new Response()
       resp.with {
@@ -189,4 +195,183 @@ class CallerService {
       return r
     }
   }
+
+  Response getXml(URL url, Map inputData) {
+    def http = new HTTPBuilder(url)
+    def result = http.request(GET, XML) { req ->
+      def queryMap = [:]
+      inputData?.each{key, val ->
+        if (key instanceof String && Utils.isSimpleType(val.getClass())) {
+          queryMap[key] = val
+        }
+        else {
+          log.warn("SKIPPING: key=${key}, value=${val}")
+        }
+      }
+
+      if (url.getQuery()) {
+        // extract query attributes from url and merge them qith queryMap
+        String q = url.getQuery()
+        String[] params = q.split("&")
+        for (param in params) {
+          String key, val
+          (key, val) = param.split("=")
+          queryMap[key] = val
+        }
+        url.set(
+          url.getProtocol(), 
+          url.getHost(), 
+          url.getPort(), 
+          url.getAuthority(), 
+          url.getUserInfo(), 
+          url.getPath(), 
+          null,         // set null query
+          url.getRef())
+      }
+
+      uri.query = queryMap
+      log.debug("URI QUERY: ${queryMap}")
+
+      response.success = { resp, xml ->
+        log.debug("POST RESPONSE CODE: ${resp.statusLine}")
+        // normalize xml response to JSON compatible object
+        // declare closure *buildObj* to be visible for recursive calling
+        def buildJsonEntity
+        buildJsonEntity = {node, obj1 ->
+          def childNodes = node.childNodes()
+          if (!childNodes.hasNext()) {
+            obj1."${node.name()}" = node.text()
+          }
+          else {
+            def col = []
+            childNodes.each{
+              def obj2 = new Expando()
+              buildJsonEntity(it, obj2)
+              col.add(obj2)
+            }
+            if (col.size() > 1) {
+              obj1."${node.name()}" = col
+            }
+            else {
+              obj1."${node.name()}" = col[0]
+            }
+          }
+        }
+
+        def jsonEntity = new Expando()
+        buildJsonEntity(xml, jsonEntity)
+
+        log.debug("RESPONSE jsonEntity: ${jsonEntity.toString()}")
+        log.debug("RESPONSE TO JSON: ${JsonOutput.toJson(jsonEntity)}")
+        Response r = new Response()
+        r.with {
+          (success, data) = [true, jsonEntity]
+        }
+        return r
+      }
+
+      response.failure = { resp ->
+        log.debug("FAILURE: STATUSCODE=${resp.statusLine.statusCode}, ${resp.statusLine.reasonPhrase}")
+        Response r = new Response()
+        r.with {
+          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+        }
+        return r
+      }
+    }
+
+    if (result) {
+      log.debug("RESPONSE: ${result}")
+      return result
+    }
+    else {
+      Response r = new Response()
+      r.with {
+        (success, errorCode, errorDescr) = [true, "SI_ERR_REST_CALL_UNDEFINED", "Response from REST call is undefined"]
+      }
+      return r
+    }
+  }
+
+  Response postXml(URL url, Map inputData) {
+    // build body's XML recursivelly
+    // declare buildBodyXml closure before its definition to be visible inside it content
+    def buildBodyXml
+    buildBodyXml = {c ->
+      if (c instanceof Map) {
+        c.each{ key, value ->
+          if (Utils.isSimpleType(value.getClass())) {
+            "$key"("$value")
+          }
+          else {
+            "$key" {
+              buildBodyXml(value)
+            }
+          }
+        }
+      }
+      else if (c instanceof List) {
+        c.each{value ->
+          buildBodyXml(value)
+        }
+      }
+    }
+    log.debug("XML inputData: ${inputData.toString()}")
+    def http = new HTTPBuilder(url)
+    def result = http.request(POST, XML) { req ->
+      body = {
+        buildBodyXml.delegate = delegate
+        buildBodyXml(inputData)
+      }
+
+      response.success = { resp, xml ->
+        log.debug("POST RESPONSE CODE: ${resp.statusLine}")
+        // normalize xml response to JSON compatible object
+        // declare closure *buildObj* to be visible for recursive calling
+        def buildJsonEntity
+        buildJsonEntity = {node, obj1 ->
+          def childNodes = node.childNodes()
+          if (!childNodes.hasNext()) {
+            obj1."${node.name()}" = node.text()
+          }
+          else {
+            def col = []
+            childNodes.each{
+              def obj2 = new Expando()
+              buildJsonEntity(it, obj2)
+              col.add(obj2)
+            }
+            if (col.size() > 1) {
+              obj1."${node.name()}" = col
+            }
+            else {
+              obj1."${node.name()}" = col[0]
+            }
+          }
+        }
+
+        def jsonEntity = new Expando()
+        buildJsonEntity(xml, jsonEntity)
+
+        log.debug("RESPONSE jsonEntity: ${jsonEntity.toString()}")
+        log.debug("RESPONSE TO JSON: ${JsonOutput.toJson(jsonEntity)}")
+        Response r = new Response()
+        r.with {
+          (success, data) = [true, jsonEntity]
+        }
+        return r
+      }
+
+      response.failure = { resp ->
+        log.debug("POST RESPONSE FAILURE")
+        Response r = new Response()
+        r.with {
+          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+        }
+        return r
+      }
+    }
+  }
+
+  
 }

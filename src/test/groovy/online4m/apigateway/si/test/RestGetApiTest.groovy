@@ -13,7 +13,6 @@ import ratpack.test.remote.RemoteControl
 import spock.lang.Specification
 import spock.lang.Ignore
 
-@Ignore
 class RestGetApiTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
@@ -148,6 +147,40 @@ class RestGetApiTest extends Specification {
       r.data.resp_attr1 == "beta"
       r.data.resp_attr2 == "alpha"
       r.data.resp_attr3.resp_attr3_1 == "3_1"
+    }
+  }
+
+  def "Get XML with success"() {
+    given:
+    def inputJson = [
+      method: "GET",
+      mode: "SYNC",
+      format: "XML",
+      url: "http://localhost:4545/get_xml",
+      data: [
+        req_attr1: "alpha",
+        req_attr2: "beta",
+        req_attr3: [
+          req_attr3_1: "3_1"
+        ]
+      ]
+    ]
+    def json = new JsonSlurper()
+
+    when:
+    requestSpec { RequestSpec requestSpec ->
+      requestSpec.body.type("application/json")
+      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    }
+    post("api/call")
+
+    then:
+    def r = json.parseText(response.body.text)
+    with(r) {
+      success == true
+      errorCode == "0"
+      r.data
+      r.data.customer.address.street == "Beta"
     }
   }
 }

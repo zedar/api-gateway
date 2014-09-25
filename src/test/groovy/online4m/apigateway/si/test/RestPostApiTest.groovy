@@ -85,11 +85,93 @@ class RestPostApiTest extends Specification {
     post("api/call")
 
     then:
-    println "RESPONSE: ${response.status?.code}"
     def r = json.parseText(response.body.text)
     with(r) {
       success == true
       errorCode == "0"
+      data != null
+      data.id == "1"
+    }
+  }
+
+  def "Post XML synchronously with success"() {
+    given:
+    def inputJson = [
+      method: "POST",
+      mode: "SYNC",
+      format: "XML",
+      url: "http://localhost:4545/post_xml",
+      data: [
+        customer: [
+          name1: "Name1",
+          name2: "Name2",
+          mobile: "0486009988",
+          identification: [
+            type: "ID",
+            value: "AXX098765"
+          ]
+        ],
+        status: "INIT"
+      ]
+    ]
+    def json = new JsonSlurper()
+
+    when:
+    requestSpec { RequestSpec requestSpec ->
+      requestSpec.body.type("application/json")
+      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    }
+    post("api/call")
+
+    then:
+    def r = json.parseText(response.body.text)
+    with(r) {
+      success == true
+      errorCode == "0"
+      data != null
+      println "data: ${data}, ${data.customer.getClass()}"
+      data instanceof Map
+      data.customer instanceof List
+      data.customer.size() == 2
+      data.customer[0].id == "101"
+      data.customer[1].id == "102"
+    }
+  }
+
+  def "Post XML with list synchronously and get success"() {
+    given:
+    def inputJson = [
+      method: "POST",
+      mode: "SYNC",
+      format: "XML",
+      url: "http://localhost:4545/post_xml_2",
+      data: [
+        customer: [
+          ids: [
+            [id: "1"],
+            [id: "2"]
+          ]
+        ]
+      ]
+    ]
+    def json = new JsonSlurper()
+
+    when:
+    requestSpec { RequestSpec requestSpec ->
+      requestSpec.body.type("application/json")
+      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    }
+    post("api/call")
+
+    then:
+    def r = json.parseText(response.body.text)
+    with(r) {
+      success == true
+      errorCode == "0"
+      data != null
+      println "data: ${data}, ${data.customer.getClass()}"
+      data instanceof Map
+      data.customer.address.street == "Alpha"
     }
   }
 }
