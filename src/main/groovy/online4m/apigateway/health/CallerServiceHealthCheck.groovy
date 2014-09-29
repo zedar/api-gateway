@@ -9,6 +9,6 @@ class CallerServiceHealthCheck extends NamedHealthCheck {
   }
 
   String getName() {
-    return "online4m_api_gateway_caller_service_health_check"
+    return "apigateway"
   }
 }

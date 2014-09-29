@@ -1,6 +1,12 @@
 import static ratpack.groovy.Groovy.groovyTemplate
 import static ratpack.groovy.Groovy.ratpack
 
+import ratpack.server.PublicAddress
+
+import static ratpack.registry.Registries.just
+
+import ratpack.render.NoSuchRendererException
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -9,6 +15,8 @@ import groovy.json.JsonOutput
 import groovy.xml.MarkupBuilder
 
 import groovy.json.JsonSlurper
+
+import groovy.transform.TupleConstructor
 
 import ratpack.codahale.metrics.CodaHaleMetricsModule
 import ratpack.perf.incl.*
@@ -22,6 +30,9 @@ import online4m.apigateway.si.CallerService
 import online4m.apigateway.si.CallerServiceAsync
 import online4m.apigateway.si.Request
 import online4m.apigateway.si.Response
+import online4m.apigateway.si.Utils
+import online4m.apigateway.si.AcceptHeaderValue
+
 
 final Logger log = LoggerFactory.getLogger(Ratpack.class)
 
@@ -40,14 +51,57 @@ ratpack {
     prefix("api") {
       handler {
         // common functionality for all the other REST methods
-        
         // log HTTP header names and their values
-        request.headers?.names?.each {name ->
-          log.debug("HEADER ${name}, VALUES: ${request.headers?.getAll(name)}")
-        }
-
+        /* request.headers?.names?.each {name -> */
+        /*   log.debug("HEADER ${name}, VALUES: ${request.headers?.getAll(name)}") */
+        /* } */
         // call next() to process request
-        next()
+        String acceptHeader = request.headers?.get("Accept") ?: "application/json"
+        if (acceptHeader == "*/*") {
+          acceptHeader = "application/json"
+        }
+        next(just(new AcceptHeaderValue(acceptHeader)))
+      }
+
+      // get list of available APIs - follow HAL hypertext application language conventions
+      get { PublicAddress publicAddress ->
+        log.debug("PUBLIC ADDRESS: ${publicAddress.getAddress(context)}")
+        String serverUrl = publicAddress.getAddress(context).toString()
+        // IMPORTANT: element of structure cannot be keyword like "call" because then Groovy tries to call it.
+        def links = [
+          _links: [
+            self: [
+              href: serverUrl + "/api"
+            ],
+            "call-api": [
+              href: serverUrl + "/api/call",
+              title: "Call external API"
+            ],
+            "health-checks": [
+              href: serverUrl + "/api/health-checks",
+              title: "Run all health checks"
+            ],
+            "health-check-named": [
+              href: serverUrl + "/api/call/health-check/:name",
+              templated: true,
+              title: "Available: apigateway"
+            ]
+          ]
+        ]
+
+        AcceptHeaderValue acceptHeader = context.get(AcceptHeaderValue.class)
+        if (acceptHeader.value == "application/json" ||
+            acceptHeader.value == "application/hal+json") {
+          response.contentType(acceptHeader.value)
+          render JsonOutput.prettyPrint(JsonOutput.toJson(links))
+        }
+        else if (acceptHeader.value == "application/xml") {
+          response.contentType(acceptHeader.value)
+          render Utils.buildXmlString(links)
+        }
+        else {
+          throw new NoSuchRendererException(links)
+        }
       }
 
       // get named health check
@@ -58,18 +112,21 @@ ratpack {
         render healthCheckRegistry.runHealthChecks().toString()
       }
 
+      // call reactive way - RxJava
       post("call") {CallerServiceAsync callerServiceAsync ->
         callerServiceAsync.invokeRx(request.body.text).single().subscribe() { Response response ->
           render JsonOutput.toJson(response)
         }
       }
       
+      // call with ratpack promise
       post("call1") { CallerServiceAsync callerService ->
         callerService.invoke(request.body.text).then {
           render JsonOutput.toJson(it)
         }
       }
 
+      // call with ratpack blocking code (it is running in seperate thread)
       post("call2") {CallerService callerService ->
         blocking {
           def slurper = new JsonSlurper()
@@ -94,7 +151,7 @@ ratpack {
         }
       }
 
-      get {
+      get("bycontent") {
         byContent {
           json {
             // if HTTP header: Accept is not given then first type is returned as default
@@ -118,8 +175,6 @@ ratpack {
       }
     }
 
-
-        
     assets "public"
   }
 }

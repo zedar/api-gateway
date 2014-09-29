@@ -15,6 +15,11 @@ import groovy.json.JsonOutput
 @Slf4j
 class CallerService {
 
+  /**
+   *  Invoke external API. Parse input body text to json map. Validate input data.
+   *  Build *Request* object and then call external API.
+   *  @param bodyText - not parsed body text
+   */
   Response invoke(String bodyText) {
     try {
       def slurper = new JsonSlurper()
@@ -44,6 +49,10 @@ class CallerService {
     }
   }
 
+  /**
+   *  Validate input json map if all required attributes are provided.
+   *  @param data - body text converted to json map
+   */
   Response validate(Map data) {
     if (!(data instanceof Map)) {
       return new Response(false, "SI_ERR_WRONG_INPUT", "Wrong input data format")
@@ -60,14 +69,23 @@ class CallerService {
     return new Response(true)
   }
 
+  /**
+   *  Call external API defined by *Request* object. Assumes that request object has been validated.
+   *  Supported combinations of attributes:
+   *    SYNC + GET + JSON
+   *    SYNC + POST + JSON
+   *    SYNC + GET + XML
+   *    SYNC + POST + XML
+   *  @param request - request with attributes required to call external API
+   */
   Response invoke(Request request) {
     log.debug("REQUEST: ${request}")
 
     if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
-      return invoke_GetJson(request.url, request.data)
+      return getJson(request.url, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      return invoke_PostJson(request.url, request.data)
+      return postJson(request.url, request.data)
     }
     else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
       return getXml(request.url, request.data)
@@ -84,43 +102,13 @@ class CallerService {
     }
   }
 
-  Response invoke_GetJson(URL url, Map inputData) {
-    // example: http://groovy.codehaus.org/HTTP+Builder
+  private Response getJson(URL url, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(GET, JSON) { req ->
       headers.Accept = "application/json"
-      def queryMap = [:]
-      inputData?.each{key, val ->
-        if (key instanceof String && Utils.isSimpleType(val.getClass())) {
-          queryMap[key] = val
-        }
-        else {
-          log.warn("SKIPPING: key=${key}, value=${val}")
-        }
-      }
-
-      if (url.getQuery()) {
-        // extract query attributes from url and merge them qith queryMap
-        String q = url.getQuery()
-        String[] params = q.split("&")
-        for (param in params) {
-          String key, val
-          (key, val) = param.split("=")
-          queryMap[key] = val
-        }
-        url.set(
-          url.getProtocol(), 
-          url.getHost(), 
-          url.getPort(), 
-          url.getAuthority(), 
-          url.getUserInfo(), 
-          url.getPath(), 
-          null,         // set null query
-          url.getRef())
-      }
+      def queryMap = Utils.buildQueryAttributesMap(url, inputData)
 
       uri.query = queryMap
-      log.debug("URI QUERY: ${queryMap}")
 
       response.success = { resp, json ->
         log.debug("SUCCESS: STATUSCODE=${resp.statusLine.statusCode}, json=${json}")
@@ -157,7 +145,7 @@ class CallerService {
     }
   }
 
-  Response invoke_PostJson(URL url, Map inputData) {
+  private Response postJson(URL url, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(POST, JSON) { req ->
       headers.Accept = "application/json"
@@ -196,76 +184,19 @@ class CallerService {
     }
   }
 
-  Response getXml(URL url, Map inputData) {
+  private Response getXml(URL url, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(GET, XML) { req ->
-      def queryMap = [:]
-      inputData?.each{key, val ->
-        if (key instanceof String && Utils.isSimpleType(val.getClass())) {
-          queryMap[key] = val
-        }
-        else {
-          log.warn("SKIPPING: key=${key}, value=${val}")
-        }
-      }
-
-      if (url.getQuery()) {
-        // extract query attributes from url and merge them qith queryMap
-        String q = url.getQuery()
-        String[] params = q.split("&")
-        for (param in params) {
-          String key, val
-          (key, val) = param.split("=")
-          queryMap[key] = val
-        }
-        url.set(
-          url.getProtocol(), 
-          url.getHost(), 
-          url.getPort(), 
-          url.getAuthority(), 
-          url.getUserInfo(), 
-          url.getPath(), 
-          null,         // set null query
-          url.getRef())
-      }
+      def queryMap = Utils.buildQueryAttributesMap(url, inputData)
 
       uri.query = queryMap
-      log.debug("URI QUERY: ${queryMap}")
 
       response.success = { resp, xml ->
-        log.debug("POST RESPONSE CODE: ${resp.statusLine}")
-        // normalize xml response to JSON compatible object
-        // declare closure *buildObj* to be visible for recursive calling
-        def buildJsonEntity
-        buildJsonEntity = {node, obj1 ->
-          def childNodes = node.childNodes()
-          if (!childNodes.hasNext()) {
-            obj1."${node.name()}" = node.text()
-          }
-          else {
-            def col = []
-            childNodes.each{
-              def obj2 = new Expando()
-              buildJsonEntity(it, obj2)
-              col.add(obj2)
-            }
-            if (col.size() > 1) {
-              obj1."${node.name()}" = col
-            }
-            else {
-              obj1."${node.name()}" = col[0]
-            }
-          }
-        }
-
-        def jsonEntity = new Expando()
-        buildJsonEntity(xml, jsonEntity)
-
-        log.debug("RESPONSE jsonEntity: ${jsonEntity.toString()}")
-        log.debug("RESPONSE TO JSON: ${JsonOutput.toJson(jsonEntity)}")
+        log.debug("GET XML RESPONSE CODE: ${resp.statusLine}")
+        log.debug("GET XML RESPONSE TYPE: ${xml.getClass()}")
         Response r = new Response()
         r.with {
-          (success, data) = [true, jsonEntity]
+          (success, data) = [true, Utils.buildJsonEntity(xml)]
         }
         return r
       }
@@ -293,71 +224,18 @@ class CallerService {
     }
   }
 
-  Response postXml(URL url, Map inputData) {
-    // build body's XML recursivelly
-    // declare buildBodyXml closure before its definition to be visible inside it content
-    def buildBodyXml
-    buildBodyXml = {c ->
-      if (c instanceof Map) {
-        c.each{ key, value ->
-          if (Utils.isSimpleType(value.getClass())) {
-            "$key"("$value")
-          }
-          else {
-            "$key" {
-              buildBodyXml(value)
-            }
-          }
-        }
-      }
-      else if (c instanceof List) {
-        c.each{value ->
-          buildBodyXml(value)
-        }
-      }
-    }
+  private Response postXml(URL url, Map inputData) {
     log.debug("XML inputData: ${inputData.toString()}")
     def http = new HTTPBuilder(url)
     def result = http.request(POST, XML) { req ->
-      body = {
-        buildBodyXml.delegate = delegate
-        buildBodyXml(inputData)
-      }
+      body = Utils.buildXmlString(inputData)
 
       response.success = { resp, xml ->
         log.debug("POST RESPONSE CODE: ${resp.statusLine}")
-        // normalize xml response to JSON compatible object
-        // declare closure *buildObj* to be visible for recursive calling
-        def buildJsonEntity
-        buildJsonEntity = {node, obj1 ->
-          def childNodes = node.childNodes()
-          if (!childNodes.hasNext()) {
-            obj1."${node.name()}" = node.text()
-          }
-          else {
-            def col = []
-            childNodes.each{
-              def obj2 = new Expando()
-              buildJsonEntity(it, obj2)
-              col.add(obj2)
-            }
-            if (col.size() > 1) {
-              obj1."${node.name()}" = col
-            }
-            else {
-              obj1."${node.name()}" = col[0]
-            }
-          }
-        }
 
-        def jsonEntity = new Expando()
-        buildJsonEntity(xml, jsonEntity)
-
-        log.debug("RESPONSE jsonEntity: ${jsonEntity.toString()}")
-        log.debug("RESPONSE TO JSON: ${JsonOutput.toJson(jsonEntity)}")
         Response r = new Response()
         r.with {
-          (success, data) = [true, jsonEntity]
+          (success, data) = [true, Utils.buildJsonEntity(xml)]
         }
         return r
       }
@@ -372,6 +250,4 @@ class CallerService {
       }
     }
   }
-
-  
 }

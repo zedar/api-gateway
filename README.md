@@ -17,18 +17,56 @@ Primary goals are:
 API Gateway is [*ratpack*](http://www.ratpack.io) based project. 
 All classes are written in [*Groovy*](http://groovy.codehaus.org).
 It uses [*Gradle*](http://www.gradle.org) build subsystem.
+It follows [HAL - Hypertext Application Language](http://stateless.co/hal_specification.html).
 
 # API specification
 
 ## Endpoints
 
-### api/call
+### /api
+
+Lists all available APIs
+
+**Method:** GET
+**Content-Type:** application/json or application/hal+json
+
+Example call:
+
+    $ curl -X GET -H "Accept: application/hal+json" http://localhost:5050/api
+
+or
+    $ curl -X GET -H "Accept: application/json" http://localhost:5050/api
+
+Response:
+
+    {
+      "_links": {
+          "self": {
+              "href": "http://localhost:5050/api"
+          },
+          "call-api": {
+              "href": "http://localhost:5050/api/call",
+              "title": "Call external API"
+          },
+          "health-checks": {
+              "href": "http://localhost:5050/api/health-checks",
+              "title": "Run all health checks"
+          },
+          "health-check-named": {
+              "href": "http://localhost:5050/api/call/health-check/:name",
+              "templated": true,
+              "title": "Available: apigateway"
+          }
+      }
+    }
+
+### /api/call
 
 Call external API.
 
 **Method:** POST
 **Content-Type:** JSON
-**Data Format:**
+**Input Data Format:**
 
     {
       "method": "GET|POST|PUT|DELETE",
@@ -78,7 +116,7 @@ After that mountebank server should be available with command:
 
     $ mb
 
-## Running tests
+## Tests
 
 Please look at each groovy class from test folder. 
 Some of them, especially for functional testing with some real services, are annotated with @Ignore annotation (feature of [Spock](https://code.google.com/p/spock/) BDD testing framework).
@@ -97,6 +135,11 @@ Following tasks from *build.gradle* do the job:
     startMounteBank - start mountebank server with *mb* shell command
     initMounteBank  - initialize stubs configuration with *./src/test/groovy/online4m/apigateway/si/test/imposter.json* file.
     testFinished    - kill spwaned processes attached to mountebank ports
+
+# TODO:
+
+* Add ASYNC calls with response callbacks and storing responses in local storage
+* Add EVENT async calls without waiting for response
 
 # Project structure
 
