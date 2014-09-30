@@ -3,10 +3,6 @@ import static ratpack.groovy.Groovy.ratpack
 
 import ratpack.server.PublicAddress
 
-import static ratpack.registry.Registries.just
-
-import ratpack.render.NoSuchRendererException
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -31,7 +27,6 @@ import online4m.apigateway.si.CallerServiceAsync
 import online4m.apigateway.si.Request
 import online4m.apigateway.si.Response
 import online4m.apigateway.si.Utils
-import online4m.apigateway.si.AcceptHeaderValue
 
 
 final Logger log = LoggerFactory.getLogger(Ratpack.class)
@@ -56,11 +51,7 @@ ratpack {
         /*   log.debug("HEADER ${name}, VALUES: ${request.headers?.getAll(name)}") */
         /* } */
         // call next() to process request
-        String acceptHeader = request.headers?.get("Accept") ?: "application/json"
-        if (acceptHeader == "*/*") {
-          acceptHeader = "application/json"
-        }
-        next(just(new AcceptHeaderValue(acceptHeader)))
+        next()
       }
 
       // get list of available APIs - follow HAL hypertext application language conventions
@@ -89,18 +80,16 @@ ratpack {
           ]
         ]
 
-        AcceptHeaderValue acceptHeader = context.get(AcceptHeaderValue.class)
-        if (acceptHeader.value == "application/json" ||
-            acceptHeader.value == "application/hal+json") {
-          response.contentType(acceptHeader.value)
-          render JsonOutput.prettyPrint(JsonOutput.toJson(links))
-        }
-        else if (acceptHeader.value == "application/xml") {
-          response.contentType(acceptHeader.value)
-          render Utils.buildXmlString(links)
-        }
-        else {
-          throw new NoSuchRendererException(links)
+        byContent {
+          json {
+            render JsonOutput.prettyPrint(JsonOutput.toJson(links))
+          }
+          type("application/hal+json") {
+            render JsonOutput.prettyPrint(JsonOutput.toJson(links))
+          }
+          xml {
+            render Utils.buildXmlString(links)
+          }
         }
       }
 
