@@ -72,10 +72,18 @@ Call external API.
     {
       "method": "GET|POST|PUT|DELETE",
       "mode":   "SYNC|ASYNC|EVENT",
-      "format": "JSON|XML",
+      "format": "JSON|XML|URLENC",
       "url":    "URI OF EXTERNAL ENDPOINT",
       "data":   JSON
     }
+
+when:
+  
+  * format=JSON sets header **Content-Type: application/json**
+  * format=XML sets header **Content-Type: application/xml**
+  * format=URLENC sets header **Content-Type: application/x-www-form-urlencoded**
+
+**Important:** URLENC format makes sense only for method=POST.
 
 Example HipChat API call:
 
