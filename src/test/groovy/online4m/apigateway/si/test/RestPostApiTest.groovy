@@ -18,6 +18,7 @@ class RestPostApiTest extends Specification {
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
   RemoteControl remote = new RemoteControl(aut)
 
+  @Ignore
   def "EMPTY RESPONSE"() {
     given:
     def inputJson = [
@@ -56,6 +57,7 @@ class RestPostApiTest extends Specification {
     }
   }
 
+  @Ignore
   def "Success: POST SYNC JSON"() {
     given:
     def inputJson = [
@@ -95,6 +97,7 @@ class RestPostApiTest extends Specification {
     }
   }
 
+  @Ignore
   def "Post XML synchronously with success"() {
     given:
     def inputJson = [
@@ -139,6 +142,7 @@ class RestPostApiTest extends Specification {
     }
   }
 
+  @Ignore
   def "Post XML with list synchronously and get success"() {
     given:
     def inputJson = [
@@ -173,6 +177,119 @@ class RestPostApiTest extends Specification {
       println "data: ${data}, ${data.customer.getClass()}"
       data instanceof Map
       data.customer.address.street == "Alpha"
+    }
+  }
+
+  def "POST URLENC with API json output and get success"() {
+    given:
+    def inputJson = [
+      method: "POST",
+      mode: "SYNC",
+      format: "URLENC",
+      url: "http://localhost:4545/post_urlenc.json",
+      data: [
+        "attr_1": "attr1val",
+        "attr_2": "attr2val",
+        customer: [
+          ids: [
+            [id: "1"],
+            [id: "2"]
+          ]
+        ]
+      ]
+    ]
+    def json = new JsonSlurper()
+
+    when:
+    requestSpec { RequestSpec requestSpec ->
+      requestSpec.body.type("application/json")
+      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    }
+    post("api/call")
+
+    then:
+    def r = json.parseText(response.body.text)
+    with(r) {
+      success == true
+      errorCode == "0"
+      data != null
+      println "data: ${data}, ${data.customer.getClass()}"
+      data instanceof Map
+      data.customer.address.street == "Alpha"
+    }
+  }
+  
+  def "POST URLENC with API xml output and get success"() {
+    given:
+    def inputJson = [
+      method: "POST",
+      mode: "SYNC",
+      format: "URLENC",
+      url: "http://localhost:4545/post_urlenc.xml",
+      data: [
+        "attr_1": "attr1val",
+        "attr_2": "attr2val",
+        customer: [
+          ids: [
+            [id: "1"],
+            [id: "2"]
+          ]
+        ]
+      ]
+    ]
+    def json = new JsonSlurper()
+
+    when:
+    requestSpec { RequestSpec requestSpec ->
+      requestSpec.body.type("application/json")
+      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    }
+    post("api/call")
+
+    then:
+    def r = json.parseText(response.body.text)
+    with(r) {
+      success == true
+      errorCode == "0"
+      data != null
+      println "data: ${data}, ${data.customer.getClass()}"
+      data instanceof Map
+      data.customer.address.street == "Beta"
+    }
+  }
+
+  def "POST URLENC with API unknown output and fail"() {
+    given:
+    def inputJson = [
+      method: "POST",
+      mode: "SYNC",
+      format: "URLENC",
+      url: "http://localhost:4545/post_urlenc.unknown",
+      data: [
+        "attr_1": "attr1val",
+        "attr_2": "attr2val",
+        customer: [
+          ids: [
+            [id: "1"],
+            [id: "2"]
+          ]
+        ]
+      ]
+    ]
+    def json = new JsonSlurper()
+
+    when:
+    requestSpec { RequestSpec requestSpec ->
+      requestSpec.body.type("application/json")
+      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    }
+    post("api/call")
+
+    then:
+    def r = json.parseText(response.body.text)
+    with(r) {
+      success == false
+      errorCode == "SI_UNSUPPORTED_API_CONTENT_TYPE"
     }
   }
 }

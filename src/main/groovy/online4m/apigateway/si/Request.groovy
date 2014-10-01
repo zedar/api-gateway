@@ -12,7 +12,12 @@ enum RequestMode {
 }
 
 enum RequestFormat {
-  JSON, XML
+  // Content-Type: application/json
+  JSON,
+  // Content-Type: application/xml
+  XML, 
+  // Content-Type: application/x-www-form-urlencoded
+  URLENC
 }
 
 @ToString @TupleConstructor

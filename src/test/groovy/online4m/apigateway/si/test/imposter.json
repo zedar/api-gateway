@@ -117,6 +117,93 @@
           "path": "/get_xml"
         }
       }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "200",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"customer\": {\"address\": {\"street\": \"Alpha\"}}}"
+        }
+      }],
+      "predicates": [{
+        "and": [
+          {
+            "equals": {
+              "method": "POST",
+              "path": "/post_urlenc.json",
+              "headers": {
+                "Content-Type": "application/x-www-form-urlencoded"
+              }
+            }
+          },
+          {
+            "matches": {
+              "body": "^attr_1=attr1val&attr_2=attr2val"
+            }
+          }
+        ]
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "200",
+          "headers": {
+            "Content-Type": "application/xml"
+          },
+          "body": "<customer><address><street>Beta</street></address></customer>"
+        }
+      }],
+      "predicates": [{
+        "and": [
+          {
+            "equals": {
+              "method": "POST",
+              "path": "/post_urlenc.xml",
+              "headers": {
+                "Content-Type": "application/x-www-form-urlencoded"
+              }
+            }
+          },
+          {
+            "matches": {
+              "body": "^attr_1=attr1val&attr_2=attr2val"
+            }
+          }
+        ]
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "200",
+          "headers": {
+            "Content-Type": "application/unknown"
+          },
+          "body": "customer=Beta"
+        }
+      }],
+      "predicates": [{
+        "and": [
+          {
+            "equals": {
+              "method": "POST",
+              "path": "/post_urlenc.unknown",
+              "headers": {
+                "Content-Type": "application/x-www-form-urlencoded"
+              }
+            }
+          },
+          {
+            "matches": {
+              "body": "^attr_1=attr1val&attr_2=attr2val"
+            }
+          }
+        ]
+      }]
     }
   ]
 }

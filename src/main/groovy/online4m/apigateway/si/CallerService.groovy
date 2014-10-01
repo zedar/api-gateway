@@ -6,6 +6,8 @@ import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
+import groovy.util.XmlSlurper
+
 import groovyx.net.http.*
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
@@ -76,6 +78,7 @@ class CallerService {
    *    SYNC + POST + JSON
    *    SYNC + GET + XML
    *    SYNC + POST + XML
+   *    SYNC + POST + URLENC
    *  @param request - request with attributes required to call external API
    */
   Response invoke(Request request) {
@@ -92,6 +95,9 @@ class CallerService {
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
       return postXml(request.url, request.data)
+    }
+    else if (request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
+      return postUrlEncoded(request.url, request.data)
     }
     else {
       Response resp = new Response()
@@ -238,6 +244,49 @@ class CallerService {
           (success, data) = [true, Utils.buildJsonEntity(xml)]
         }
         return r
+      }
+
+      response.failure = { resp ->
+        log.debug("POST RESPONSE FAILURE")
+        Response r = new Response()
+        r.with {
+          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+        }
+        return r
+      }
+    }
+  }
+
+  private Response postUrlEncoded(URL url, Map inputData) {
+    log.debug("URLENCODED inputData: ${inputData.toString()}")
+    def http = new HTTPBuilder(url)
+    def result = http.request(POST) { req ->
+      def queryMap = Utils.buildQueryAttributesMap(url, inputData)
+      send URLENC, queryMap
+
+      response.success = { resp ->
+        String contentType = resp.headers."Content-Type"
+        log.debug("CONTENT-TYPE: ${contentType}")
+        if (contentType == "application/json") {
+          def json = new JsonSlurper().parseText(resp.entity.content.text)
+          Map jsonMap = json
+          Response r = new Response()
+          r.with {
+            (success, data) = [true, jsonMap]
+          }
+          return r
+        }
+        else if (contentType == "application/xml") {
+          def xml = new XmlSlurper().parseText(resp.entity.content.text)
+          Response r = new Response()
+          r.with {
+            (success, data) = [true, Utils.buildJsonEntity(xml)]
+          }
+          return r
+        }
+        else {
+          return new Response(false, "SI_UNSUPPORTED_API_CONTENT_TYPE", "Unsupported API content type")
+        }
       }
 
       response.failure = { resp ->
