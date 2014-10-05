@@ -137,7 +137,7 @@ As result you should get:
     {
       "errorCode":"0",
       "data": {
-        "access_token":"ACCESS_TOKEN_URLENCIDED",
+        "access_token":"ACCESS_TOKEN_URLENCODED",
         "token_type":"bearer"
       },
       "success":true
