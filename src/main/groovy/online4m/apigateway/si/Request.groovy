@@ -26,7 +26,10 @@ class Request {
   RequestMode   mode
   RequestFormat format
   URL           url
+  // HTTP request headers in form of key-value pairs. For example:
+  //    "Authorization": "Bearer ACCESS_KEY"
   Map           headers
+  // HTTP request data to be sent as either query attributes or body content
   Object        data
 
   static Request build(Map data) {

@@ -70,24 +70,88 @@ Call external API.
 **Input Data Format:**
 
     {
-      "method": "GET|POST|PUT|DELETE",
-      "mode":   "SYNC|ASYNC|EVENT",
-      "format": "JSON|XML|URLENC",
-      "url":    "URI OF EXTERNAL ENDPOINT",
-      "data":   JSON
+      "method":   "GET|POST|PUT|DELETE",
+      "mode":     "SYNC|ASYNC|EVENT",
+      "format":   "JSON|XML|URLENC",
+      "url":      "URI OF EXTERNAL ENDPOINT",
+      "headers":  JSON,
+      "data":     JSON
     }
 
-when:
+**method:**
+
+  * Currently supported are: **GET** and **POST**
+
+**mode:**
   
+  * mode=SYNC   - call API synchronously, send request and wait for response
+  * mode=ASYNC  - call API asynchronously, send request and do not wait for response. Response might be avilable for caller as:
+    * callback invocation
+    * pull request
+  * mode=EVENT  - call API asynchronously without response, send request as notification
+  
+**format:**
+
   * format=JSON sets header **Content-Type: application/json**
   * format=XML sets header **Content-Type: application/xml**
   * format=URLENC sets header **Content-Type: application/x-www-form-urlencoded**
 
 **Important:** URLENC format makes sense only for method=POST.
 
+**url:**
+
+  * url of target API
+    * If method=GET query parameters (after "?") are merged with simple attributes from **data** structure.
+
+**headers:**
+
+  * list of HTTP request headers in the form of key-value pairs
+    
+  "headers": {
+    "Authorization": "Bearer ACCESS_TOKEN"
+  }
+
+**data:**
+
+  * JSON either with list of query parameters or request body content.
+
+#### Example: HipChat - get history of chats
+
 Example HipChat API call:
 
     $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=YOUR_TOKEN", "data": {"max-results": {"l": 10}}}' -i http://localhost:5050/api/call
+
+#### Example: Twitter query with OAUTH authorization
+
+Before any API call you have to register your application in twitter. By doing this you get unique client id and client secret.
+These attributes are needed to ask for access token. Access token is used in all subsequent api calls.
+
+Point your browser to [apps.twitter.com](https://apps.twitter.com), click the button *Create New App* and  register your application.
+
+Next, request for a access token.
+
+    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "POST", "mode": "SYNC", "format": "URLENC", "url": "https://api.twitter.com/oauth2/token", "data": {"grant_type": "client_credentials", "client_id", "YOUR_APP_ID", "client_secret", "YOUR_APP_SECRET"}}' -i http://localhost:5050/api/call
+
+As result you should get:
+  
+    {
+      "errorCode":"0",
+      "data": {
+        "access_token":"ACCESS_TOKEN_URLENCIDED",
+        "token_type":"bearer"
+      },
+      "success":true
+    }
+
+Now you are ready to call, for example, twitter's search API. But now to request add headers map:
+
+    "headers": {
+      "Authorization": "Bearer ACCESS_TOKEN_URLENCODED"
+    }
+
+and invocation:
+
+    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.twitter.com/1.1/search/tweets.json", "headers": {"Authorization": " Bearer ACCESS_TOKEN_URLENCODED"}, "data": {"q": "ratpackweb"}' -i http://localhost:5050/api/call
 
 ### api/health-checks
 

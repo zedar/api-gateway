@@ -68,6 +68,14 @@ class CallerService {
       log.debug("MISSING ATTRS: ${missingAttrs}")
       return new Response(false, "SI_ERR_MISSING_ATTRS", "Missing input attributes: ${missingAttrs}")
     }
+    if (data.headers && !(data.headers instanceof Map)) {
+      log.debug("Incorrect data type for 'headers' attribute")
+      return new Response(false, "SI_ERR_WRONG_TYPEOF_HEADERS", 'headers attribute has to be JSON object - "headers": {}')
+    }
+    if (data.data && !(data.data instanceof Map)) {
+      log.debug("Incorrect data type for 'data' attribute")
+      return new Response(false, "SI_ERR_WRONG_TYPEOF_DATA", 'data attribute has to be JSON object - "data": {}')
+    }
     return new Response(true)
   }
 
@@ -275,7 +283,7 @@ class CallerService {
       response.success = { resp ->
         String contentType = resp.headers."Content-Type"
         log.debug("CONTENT-TYPE: ${contentType}")
-        if (contentType == "application/json") {
+        if (contentType.startsWith("application/json")) {
           def json = new JsonSlurper().parseText(resp.entity.content.text)
           Map jsonMap = json
           Response r = new Response()
@@ -284,7 +292,7 @@ class CallerService {
           }
           return r
         }
-        else if (contentType == "application/xml") {
+        else if (contentType.startsWith("application/xml")) {
           def xml = new XmlSlurper().parseText(resp.entity.content.text)
           Response r = new Response()
           r.with {
