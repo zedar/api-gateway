@@ -26,6 +26,7 @@ class Request {
   RequestMode   mode
   RequestFormat format
   URL           url
+  Map           headers
   Object        data
 
   static Request build(Map data) {
@@ -34,6 +35,7 @@ class Request {
     req.mode = data.mode as RequestMode
     req.format = data.format as RequestFormat
     req.url = data.url.toURL()
+    req.headers = data.headers ?: [:]
     req.data = data.data ?: []
     return req
   }

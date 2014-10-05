@@ -2,3 +2,4 @@
 build
 **/*.pid
 .gradle
+out.json

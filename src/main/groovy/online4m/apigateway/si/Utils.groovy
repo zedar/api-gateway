@@ -31,6 +31,10 @@ class Utils {
   }
 
   /**
+   *  Normalize json object to contains JSON known and compatible data types
+   */
+
+  /**
    *  Extract query attributes from url and inputData
    *  @param url - URL given by caller. After this method call url must have query set to null
    *  @param inputData - map of attributes and its values. If attribute is complex (Map, List) it is automatically skipped
@@ -67,6 +71,26 @@ class Utils {
     }
     log.debug("URI QUERY: ${queryMap}")
     return queryMap
+  }
+
+  /**
+   *  Build request headers.
+   *  @param requestHeaders - map of headers
+   *  @param headersToSet - map of headers to set
+   */
+  static HashMap buildRequestHeaders(Map requestHeaders, Map headersToSet) {
+    log.debug("BUILD REQ HEADERS: ${requestHeaders}, ${headersToSet}")
+    if (!requestHeaders || !headersToSet) {
+      return requestHeaders
+    }
+    headersToSet?.each{ key, val ->
+      log.debug("SETTING HEADER: ${key}, ${val}")
+      if (key instanceof String && Utils.isSimpleType(val.getClass())) {
+        requestHeaders[key] = val
+      }
+    }
+
+    return requestHeaders
   }
 
   /**

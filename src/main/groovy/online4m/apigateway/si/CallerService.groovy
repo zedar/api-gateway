@@ -31,7 +31,7 @@ class CallerService {
       Response response = validate(data)
       if (response?.success) {
         response = invoke(Request.build(data))
-        log.debug("RESULT DATA: ${response}")
+        log.debug("INVOKE FINISHED")
       }
       else if (!response) {
         response = new Response()
@@ -85,19 +85,19 @@ class CallerService {
     log.debug("REQUEST: ${request}")
 
     if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
-      return getJson(request.url, request.data)
+      return getJson(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      return postJson(request.url, request.data)
+      return postJson(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
-      return getXml(request.url, request.data)
+      return getXml(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
-      return postXml(request.url, request.data)
+      return postXml(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
-      return postUrlEncoded(request.url, request.data)
+      return postUrlEncoded(request.url, request.headers, request.data)
     }
     else {
       Response resp = new Response()
@@ -108,16 +108,20 @@ class CallerService {
     }
   }
 
-  private Response getJson(URL url, Map inputData) {
+  private Response getJson(URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(GET, JSON) { req ->
       headers.Accept = "application/json"
+      Utils.buildRequestHeaders(headers, headersToSet)
       def queryMap = Utils.buildQueryAttributesMap(url, inputData)
 
       uri.query = queryMap
 
+      log.debug "HEADERS: ${headers}"
+      log.debug "QUERY: ${queryMap}"
+
       response.success = { resp, json ->
-        log.debug("SUCCESS: STATUSCODE=${resp.statusLine.statusCode}, json=${json}")
+        log.debug("SUCCESS: STATUSCODE=${resp.statusLine.statusCode}")
         log.debug("RESP JSON class: ${json.getClass()}")
         // convert JsonObject to Map interface
         Map jsonMap = json
@@ -151,10 +155,11 @@ class CallerService {
     }
   }
 
-  private Response postJson(URL url, Map inputData) {
+  private Response postJson(URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(POST, JSON) { req ->
       headers.Accept = "application/json"
+      Utils.buildRequestHeaders(headers, headersToSet)
       body = inputData
       
       response.success = { resp, json ->
@@ -190,9 +195,10 @@ class CallerService {
     }
   }
 
-  private Response getXml(URL url, Map inputData) {
+  private Response getXml(URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(GET, XML) { req ->
+      Utils.buildRequestHeaders(headers, headersToSet)
       def queryMap = Utils.buildQueryAttributesMap(url, inputData)
 
       uri.query = queryMap
@@ -230,10 +236,11 @@ class CallerService {
     }
   }
 
-  private Response postXml(URL url, Map inputData) {
+  private Response postXml(URL url, Map headersToSet, Map inputData) {
     log.debug("XML inputData: ${inputData.toString()}")
     def http = new HTTPBuilder(url)
     def result = http.request(POST, XML) { req ->
+      Utils.buildRequestHeaders(headers, headersToSet)
       body = Utils.buildXmlString(inputData)
 
       response.success = { resp, xml ->
@@ -257,10 +264,11 @@ class CallerService {
     }
   }
 
-  private Response postUrlEncoded(URL url, Map inputData) {
+  private Response postUrlEncoded(URL url, Map headersToSet, Map inputData) {
     log.debug("URLENCODED inputData: ${inputData.toString()}")
     def http = new HTTPBuilder(url)
     def result = http.request(POST) { req ->
+      Utils.buildRequestHeaders(headers, headersToSet)
       def queryMap = Utils.buildQueryAttributesMap(url, inputData)
       send URLENC, queryMap
 

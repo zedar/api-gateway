@@ -104,6 +104,7 @@ ratpack {
       // call reactive way - RxJava
       post("call") {CallerServiceAsync callerServiceAsync ->
         callerServiceAsync.invokeRx(request.body.text).single().subscribe() { Response response ->
+          log.debug "BEFORE JsonOutput.toJson(response)"
           render JsonOutput.toJson(response)
         }
       }
