@@ -283,7 +283,7 @@ class CallerService {
       response.success = { resp ->
         String contentType = resp.headers."Content-Type"
         log.debug("CONTENT-TYPE: ${contentType}")
-        if (contentType.startsWith("application/json")) {
+        if (contentType?.startsWith("application/json")) {
           def json = new JsonSlurper().parseText(resp.entity.content.text)
           Map jsonMap = json
           Response r = new Response()
@@ -292,7 +292,7 @@ class CallerService {
           }
           return r
         }
-        else if (contentType.startsWith("application/xml")) {
+        else if (contentType?.startsWith("application/xml")) {
           def xml = new XmlSlurper().parseText(resp.entity.content.text)
           Response r = new Response()
           r.with {

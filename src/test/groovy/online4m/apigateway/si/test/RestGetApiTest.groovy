@@ -13,7 +13,6 @@ import ratpack.test.remote.RemoteControl
 import spock.lang.Specification
 import spock.lang.Ignore
 
-@Ignore
 class RestGetApiTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)

@@ -1,5 +1,7 @@
 package online4m.apigateway.si
 
+import java.util.UUID
+
 import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
@@ -22,6 +24,7 @@ enum RequestFormat {
 
 @ToString @TupleConstructor
 class Request {
+  UUID          uuid
   RequestMethod method
   RequestMode   mode
   RequestFormat format
@@ -34,6 +37,7 @@ class Request {
 
   static Request build(Map data) {
     Request req = new Request()
+    req.uuid = data.uuid ? UUID.fromString(data.uuid) : UUID.randomUUID()
     req.method = data.method as RequestMethod
     req.mode = data.mode as RequestMode
     req.format = data.format as RequestFormat
