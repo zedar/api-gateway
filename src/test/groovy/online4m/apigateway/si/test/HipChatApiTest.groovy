@@ -13,11 +13,18 @@ import ratpack.test.remote.RemoteControl
 import spock.lang.Specification
 import spock.lang.Ignore
 
-@Ignore
 class HipChatApiTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
   RemoteControl remote = new RemoteControl(aut)
+  
+  Properties properties
+
+  def setup() {
+    
+    properties = new Properties()
+    properties.load(getClass().getClassLoader().getResourceAsStream("hipchat.properties"))
+  }
 
   def "Send new notification to HipChat/online4m.com room"() {
     given:
@@ -25,7 +32,7 @@ class HipChatApiTest extends Specification {
       method: "POST",
       mode: "SYNC",
       format: "JSON",
-      url: "https://api.hipchat.com/v2/room/online4m.com/notification?auth_token=v54gzlKPiiEEKw6wgbR3waiQklj2lIoCOjVKOeDl",
+      url: "https://api.hipchat.com/v2/room/online4m.com/notification?auth_token=${properties.auth_token}",
       data: [
         message: "Test message to online4m.com"
       ]
@@ -53,7 +60,7 @@ class HipChatApiTest extends Specification {
       method: "GET",
       mode: "SYNC",
       format: "JSON",
-      url: "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=v54gzlKPiiEEKw6wgbR3waiQklj2lIoCOjVKOeDl",
+      url: "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=${properties.auth_token}",
       data: [
         "max-results": 10
       ]
@@ -84,7 +91,7 @@ class HipChatApiTest extends Specification {
       method: "GET",
       mode: "SYNC",
       format: "JSON",
-      url: "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=v54gzlKPiiEEKw6wgbR3waiQklj2lIoCOjVKOeDl",
+      url: "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=${properties.auth_token}",
       data: [
         "complex-attr": [
           "simple-attr": 20

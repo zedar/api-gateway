@@ -3,3 +3,4 @@ build
 **/*.pid
 .gradle
 out.json
+src/test/resources/hipchat.properties
