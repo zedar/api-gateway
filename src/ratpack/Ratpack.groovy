@@ -27,6 +27,7 @@ import online4m.apigateway.si.CallerServiceAsync
 import online4m.apigateway.si.Request
 import online4m.apigateway.si.Response
 import online4m.apigateway.si.Utils
+import online4m.apigateway.ds.CallerDSModule
 
 
 final Logger log = LoggerFactory.getLogger(Ratpack.class)
@@ -36,6 +37,7 @@ ratpack {
     add new CodaHaleMetricsModule().metrics().jvmMetrics().healthChecks().jmx()
     bind CallerServiceHealthCheck
     add new CallerModule()
+    add new CallerDSModule()
   }
 
   handlers {

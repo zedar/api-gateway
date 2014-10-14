@@ -16,7 +16,6 @@ import online4m.apigateway.si.Utils
 import spock.lang.Specification
 import spock.lang.Ignore
 
-@Ignore
 class ApiEndpointsTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)

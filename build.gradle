@@ -45,6 +45,9 @@ dependencies {
   // Add HTTPBuilder dependency
   compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
 
+  // Add reds client library
+  compile 'redis.clients:jedis:2.6.0'
+
   testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
   testCompile ratpack.dependency("remote-test")
 }

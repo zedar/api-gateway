@@ -165,9 +165,9 @@ Run health check defined by the given :name.
 
 **Method:** GET
 
-Run all health checks: 
+Defined health checks:
 
-* online4m_api_gateway_caller_service_health_check
+  * *apigateway*
 
 # Run Tests
 
@@ -208,6 +208,62 @@ Following tasks from *build.gradle* do the job:
     startMounteBank - start mountebank server with *mb* shell command
     initMounteBank  - initialize stubs configuration with *./src/test/groovy/online4m/apigateway/si/test/imposter.json* file.
     testFinished    - kill spwaned processes attached to mountebank ports
+
+# Key/value data storage
+
+API Gateway keeps highly dynamic data in key/value store - [Redis](http://redis.io/).  
+It is used for:
+
+  * statistics
+  * requests and their corresponding responses
+    * if mode=ASYNC, response is stored for future retrival
+  * logging of top requests and responses
+
+## Statistics
+
+### Usage
+
+Collecting number of requests:
+
+  * usage/year:{yyyy}
+  * usage/year:{yyyy}/month:{mm}
+  * usage/year:{yyyy}/month:{mm}/day:{dd}
+
+To get statistic value:
+
+    $ redis-cli> get usage/year:2014
+
+### Requests store
+
+Every request is stored as Redis hash and has structure:
+
+  * key: **request:UUID** - where UUID is unique ID of request
+    * field: **request**, value: **request serialized to JSON**
+    * field: **response**, value: **response serialized to JSON**
+    * field: **aresponse**, value: **async response serialized to JSON**
+
+If mode=ASYNC, **response** field stores first answer that is result of request registration and request sending.  
+Then **aresponse** field stores final response from service call.
+
+If mode=SYNC, **response** field stores final response from service call.
+
+To get request and response for particular UUID
+
+    $ redis-cli> hget request:UUID request
+    $ redis-cli> hget request:UUID response
+    $ redis-cli> hget request:UUID aresponse
+
+### Requests log
+
+Every request's id is stored in sorted set (by timestamp).
+
+  * key: **request-log**
+    * score: **timestamp** - datetime converted to timestamp
+    * member: **request:UUID** - where UUID is unique ID of request
+
+To get log of last 20 requests:
+
+    $ redis-cli> zrange request-log 0 20
 
 # TODO:
 

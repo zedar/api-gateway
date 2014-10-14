@@ -1,5 +1,7 @@
 package online4m.apigateway.si
 
+import javax.inject.Inject
+
 import groovy.util.logging.*
 
 import groovy.json.JsonBuilder
@@ -12,44 +14,17 @@ import groovyx.net.http.*
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 
-import groovy.json.JsonOutput
+import redis.clients.jedis.Jedis
+import redis.clients.jedis.exceptions.JedisConnectionException
 
+import online4m.apigateway.ds.JedisDS
+
+/**
+ *  This class is intended to be called as Singleton. It is threadsafe by design.
+ */
 @Slf4j
 class CallerService {
-
-  /**
-   *  Invoke external API. Parse input body text to json map. Validate input data.
-   *  Build *Request* object and then call external API.
-   *  @param bodyText - not parsed body text
-   */
-  Response invoke(String bodyText) {
-    try {
-      def slurper = new JsonSlurper()
-      def data = slurper.parseText(bodyText)
-      log.debug("INPUT DATA TYPE: ${data?.getClass()}")
-      log.debug("INPUT DATA: ${data}")
-      Response response = validate(data)
-      if (response?.success) {
-        response = invoke(Request.build(data))
-        log.debug("INVOKE FINISHED")
-      }
-      else if (!response) {
-        response = new Response()
-        response.with {
-          (success, errorCode, errorDescr) = [false, "SI_ERR_EXCEPTION", "Unexpected result from request validation"]
-        }
-      }
-      return response
-    }
-    catch (IllegalArgumentException ex) {
-      ex.printStackTrace()
-      return new Response(false, "SI_EXP_ILLEGAL_ARGUMENT", "Exception: ${ex.getMessage()}")
-    }
-    catch (Exception ex) {
-      ex.printStackTrace()
-      return new Response(false, "SI_EXCEPTION", "Exception: ${ex.getMessage()}")
-    }
-  }
+  private @Inject JedisDS jedisDS
 
   /**
    *  Validate input json map if all required attributes are provided.
@@ -80,6 +55,54 @@ class CallerService {
   }
 
   /**
+   *  Invoke external API. Parse input body text to json map. Validate input data.
+   *  Build *Request* object and then call external API.
+   *  @param bodyText - not parsed body text
+   */
+  Response invoke(String bodyText) {
+    Jedis jedis = null
+    try {
+      if (jedisDS.isOn()) {
+        jedis = jedisDS.getResource()
+      }
+      
+      def slurper = new JsonSlurper()
+      def data = slurper.parseText(bodyText)
+      log.debug("INPUT DATA TYPE: ${data?.getClass()}")
+      log.debug("INPUT DATA: ${data}")
+      Response response = validate(data)
+      if (response?.success) {
+        response = invoke(Request.build(data), jedis)
+        log.debug("INVOKE FINISHED")
+      }
+      else if (!response) {
+        response = new Response()
+        response.with {
+          (success, errorCode, errorDescr) = [false, "SI_ERR_EXCEPTION", "Unexpected result from request validation"]
+        }
+      }
+      return response
+    }
+    catch (IllegalArgumentException ex) {
+      ex.printStackTrace()
+      return new Response(false, "SI_EXP_ILLEGAL_ARGUMENT", "Exception: ${ex.getMessage()}")
+    }
+    catch (JedisConnectionException ex) {
+      ex.printStackTrace()
+      return new Response(false, "SI_EXP_REDIS_CONNECTION_EXCEPTION", "Exception: ${ex.getMessage()}")
+    }
+    catch (Exception ex) {
+      ex.printStackTrace()
+      return new Response(false, "SI_EXCEPTION", "Exception: ${ex.getMessage()}")
+    }
+    finally {
+      if (jedis) {
+        jedisDS.returnResource(jedis)
+      }
+    }
+  }
+
+  /**
    *  Call external API defined by *Request* object. Assumes that request object has been validated.
    *  Supported combinations of attributes:
    *    SYNC + GET + JSON
@@ -88,32 +111,54 @@ class CallerService {
    *    SYNC + POST + XML
    *    SYNC + POST + URLENC
    *  @param request - request with attributes required to call external API
+   *  @param jedis - Redis connection, unique instance for the given invocation, taken out of JedisPool
    */
-  Response invoke(Request request) {
+  Response invoke(Request request, Jedis jedis = null) {
     log.debug("REQUEST: ${request}")
 
+    if (jedis) {
+      jedis.hset("request:${request.uuid}", "request", JsonOutput.toJson(request))
+
+      Date dt = new Date()
+
+      jedis.zadd("request-log", dt.toTimestamp().getTime(), "request:${request.uuid}")
+
+      // increment statistics
+      jedis.incr("usage/year:${dt.getAt(Calendar.YEAR)}")
+      jedis.incr("usage/year:${dt.getAt(Calendar.YEAR)}/month:${dt.getAt(Calendar.MONTH)+1}")
+      jedis.incr("usage/year:${dt.getAt(Calendar.YEAR)}/month:${dt.getAt(Calendar.MONTH)+1}/day:${dt.getAt(Calendar.DAY_OF_MONTH)}")
+
+    }
+
+    Response response = null
+
     if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
-      return getJson(request.url, request.headers, request.data)
+      response = getJson(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      return postJson(request.url, request.headers, request.data)
+      response =  postJson(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
-      return getXml(request.url, request.headers, request.data)
+      response = getXml(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
-      return postXml(request.url, request.headers, request.data)
+      response = postXml(request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
-      return postUrlEncoded(request.url, request.headers, request.data)
+      response = postUrlEncoded(request.url, request.headers, request.data)
     }
     else {
-      Response resp = new Response()
-      resp.with {
+      response = new Response()
+      response.with {
         (success, errorCode, errorDescr) = [false, "SI_ERR_NOT_SUPPORTED_INVOCATION", "Not supported invocation mode"]
       }
-      return resp
     }
+
+    if (jedis && response) {
+      jedis.hset("request:${request.uuid}", "response", JsonOutput.toJson(response))
+    }
+
+    return response
   }
 
   private Response getJson(URL url, Map headersToSet, Map inputData) {

@@ -13,13 +13,11 @@ import ratpack.test.remote.RemoteControl
 import spock.lang.Specification
 import spock.lang.Ignore
 
-@Ignore
 class RestPostApiTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
   RemoteControl remote = new RemoteControl(aut)
 
-  @Ignore
   def "EMPTY RESPONSE"() {
     given:
     def inputJson = [
@@ -58,7 +56,6 @@ class RestPostApiTest extends Specification {
     }
   }
 
-  @Ignore
   def "Success: POST SYNC JSON"() {
     given:
     def inputJson = [
@@ -98,7 +95,6 @@ class RestPostApiTest extends Specification {
     }
   }
 
-  @Ignore
   def "Post XML synchronously with success"() {
     given:
     def inputJson = [
@@ -143,7 +139,6 @@ class RestPostApiTest extends Specification {
     }
   }
 
-  @Ignore
   def "Post XML with list synchronously and get success"() {
     given:
     def inputJson = [
