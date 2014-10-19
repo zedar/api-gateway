@@ -1,5 +1,7 @@
 package online4m.apigateway.si
 
+import java.util.UUID
+
 import javax.inject.Inject
 
 import groovy.util.logging.*
@@ -14,6 +16,13 @@ import groovyx.net.http.*
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 
+import ratpack.rx.RxRatpack
+import ratpack.exec.ExecControl
+import ratpack.exec.Execution
+import ratpack.func.Action
+import static ratpack.rx.RxRatpack.observe
+import rx.Observable
+
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
 
@@ -24,7 +33,18 @@ import online4m.apigateway.ds.JedisDS
  */
 @Slf4j
 class CallerService {
-  private @Inject JedisDS jedisDS
+  // jedisDS - reference to Redis data source connection pool
+  private final JedisDS jedisDS
+  // csCtx - common attrobutes for all service calls
+  private final CallerServiceCtx csCtx
+  // execControl - ratpack execution control
+  private final ExecControl execControl
+
+  @Inject CallerService(ExecControl execControl, JedisDS jedisDS, CallerServiceCtx csCtx) {
+    this.execControl = execControl
+    this.jedisDS = jedisDS
+    this.csCtx = csCtx
+  }
 
   /**
    *  Validate input json map if all required attributes are provided.
@@ -105,11 +125,12 @@ class CallerService {
   /**
    *  Call external API defined by *Request* object. Assumes that request object has been validated.
    *  Supported combinations of attributes:
-   *    SYNC + GET + JSON
-   *    SYNC + POST + JSON
-   *    SYNC + GET + XML
-   *    SYNC + POST + XML
-   *    SYNC + POST + URLENC
+   *    SYNC  + GET   + JSON
+   *    SYNC  + POST  + JSON
+   *    SYNC  + GET   + XML
+   *    SYNC  + POST  + XML
+   *    SYNC  + POST  + URLENC
+   *    ASYNC + POST  + JSON
    *  @param request - request with attributes required to call external API
    *  @param jedis - Redis connection, unique instance for the given invocation, taken out of JedisPool
    */
@@ -132,26 +153,33 @@ class CallerService {
 
     Response response = null
 
-    if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
+    if (request.mode == RequestMode.SYNC && request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
       response = getJson(request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
+    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
       response =  postJson(request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
+    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
       response = getXml(request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
+    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
       response = postXml(request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
+    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
       response = postUrlEncoded(request.url, request.headers, request.data)
+    }
+    else if (request.mode == RequestMode.ASYNC && request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
+      response = postJsonAsync(request.uuid, request.url, request.headers, request.data)
     }
     else {
       response = new Response()
       response.with {
-        (success, errorCode, errorDescr) = [false, "SI_ERR_NOT_SUPPORTED_INVOCATION", "Not supported invocation mode"]
+        (success, errorCode, errorDescr) = [false, "SI_ERR_NOT_SUPPORTED_INVOCATION", "Not supported invocation mode", request.uuid]
       }
+    }
+
+    if (response) {
+      response.uuid = request.uuid
     }
 
     if (jedis && response) {
@@ -359,5 +387,50 @@ class CallerService {
         return r
       }
     }
+  }
+
+  private Response postJsonAsync(UUID uuid, URL url, Map headersToSet, Map inputData) {
+    // Construct response data with location to get final response
+    if (!this.csCtx) {
+      Response r = new Response()
+      r.with {
+        (success, errorCode, errorDescr) = [false, "SI_NO_ACCESS_TO_PUBLIC_ADDRESS", "Unable to get access to main server's public address"]
+      }
+      return r
+    }
+
+    execControl.fork(new Action<Execution>() {
+      public void execute(Execution execution) throws Exception {
+        ExecControl ec = execution.getControl()
+        ec.blocking {
+          return postJson(url, headersToSet, inputData)
+        }
+        .then {
+          log.debug("POST JSON ASYNC RESPONSE: ${it.toString()}")
+        }
+      }
+    })
+    /* observe(execControl.blocking{ */
+    /*   return postJson(url, headersToSet, inputData) */
+    /* }) */
+    /* .single().subscribe() { Response response -> */
+    /*   // store response in hash set */
+    /*   log.debug("POST JSON ASYNC RESPONSE: ${response.toString()}") */
+    /*   if (jedis && response) { */
+    /*     jedis.hset("request:${uuid}", "asyncresponse", JsonOutput.toJson(response)) */
+    /*   } */
+    /* } */
+
+    String serverUrl = this.csCtx.serverUrl
+    log.debug("LAUNCHCONFIG PUB ADDR: ${serverUrl}")
+    def jsonData = [
+      location: serverUrl + "/api/asyncresponse/${uuid.toString()}"
+    ]
+    // Prepare confirmation (ack) response
+    Response r = new Response()
+    r.with {
+      (success, statusCode, data) = [true, 202, jsonData]
+    }
+    return r
   }
 }

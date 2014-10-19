@@ -1,0 +1,10 @@
+{
+    "data": {
+        "req_attr1": "alpha",
+        "req_attr2": "beta"
+    },
+    "format": "JSON",
+    "method": "POST",
+    "mode": "ASYNC",
+    "url": "http://localhost:4545/post_sync_json"
+}

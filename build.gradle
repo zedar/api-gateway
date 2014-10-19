@@ -92,23 +92,42 @@ task startMounteBank(type: ExecWait) {
   directory "."
 }
 
-task initMounteBank(dependsOn: "startMounteBank") << {
-  def p = ["curl", "-X", "POST", "-H", "\"Content-Type: application/json\"", "-d@./src/test/groovy/online4m/apigateway/si/test/imposter.json", "http://localhost:2525/imposters"].execute()
-  p.waitFor()
-  println "curl return code: ${p.exitValue()}"
-  println "process: ${p.text}"
-  def json = new JsonSlurper().parseText(p.in.text)
-  println json
-}
-
-
-task initMounteBankStubs(dependsOn: "startMounteBank", type: ExecWait) {
+task initStubs(dependsOn: "startMounteBank", type: ExecWait) {
   command "curl -X POST -d@./src/test/groovy/online4m/apigateway/si/test/imposter.json http://localhost:2525/imposters"
   //command 'curl -X POST -d {"port":4545,"protocol":"http"}  http://localhost:2525/imposters'
   directory "."
   logOutput true
 }
 
+task startRedis(type: ExecWait) {
+  command "redis-server"
+  ready "The server is now ready to accept connections"
+  directory "."
+}
+
+task stopEnv(type: FreePorts) {
+  // port: 2525 - mb (MounteBank), 
+  // port: 6379 - redis-server (Redis data store)
+  ports = [2525, 6379]
+}
+
+// Important: without mustRunAfter there could be a conflict between runEnv and CleanEnv if they are used 
+// in test.dependsOn and test.finalizedBy
+initStubs.mustRunAfter stopEnv
+startRedis.mustRunAfter stopEnv
+
+task cleanEnv(dependsOn: "stopEnv") {
+  description "Stop servers used for testing"
+}
+
+task runEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
+  description "Start servers required for testing: MounteBank (external API stubs), Redis key/value store"
+}
+
+// Important: before running any test initialize environment, so run server with stubs and redis key/value store
+// When tests are finished clean environment. Shutdown stubs server and redis key/value store.
+test.dependsOn runEnv
+test.finalizedBy cleanEnv
 
 /**
  *  Task for running external tool and waiting for it.
@@ -145,20 +164,27 @@ class ExecWait extends DefaultTask {
 }
 
 /**
- *  Add listener to kill spawned processes
+ *  Kill processes (works in unix based systems) running on the given ports.
  */
-task testFinished << {
-  println "FREE PORTS"
-  def ports = [2525]
-  ports.each { port ->
-    def cmd = "lsof -Fp -i :$port"
-    def process = cmd.execute()
-    process.in.eachLine { line -> 
-      def killProcess = "kill -9 ${line.substring(1)}".execute()
-      killProcess.waitFor()
+class FreePorts extends DefaultTask {
+  List ports = []
+
+  @TaskAction
+  def freePorts() {
+    println " === FreePorts Task started: $ports"
+    if (!ports) {
+      return
+    }
+    ports.each { port ->
+      def cmd = "lsof -Fp -i :$port"
+      def process = cmd.execute()
+      process.in.eachLine { line ->
+        def killCmd = "kill -9 ${line.substring(1)}"
+        def killProcess = killCmd.execute()
+        killProcess.waitFor()
+        println " === Process killed on port: $port"
+      }
     }
   }
 }
 
-test.dependsOn initMounteBankStubs
-test.finalizedBy testFinished

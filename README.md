@@ -2,7 +2,7 @@ API Gateway - unified access to REST or Web Services
 -----------------------------
 
 API Gateway could play a role of single entry point for invocation of diverse services, either REST or WebServices.
-Unifies a way services are called. 
+Unifies a way, services are called. 
 Primary goals are: 
 
 * all requests have to be handled asynchronously (no thread blocking);
@@ -101,7 +101,7 @@ Call external API.
 **url:**
 
   * url of target API
-    * If method=GET query parameters (after "?") are merged with simple attributes from **data** structure.
+    * If method==GET query parameters (after "?") are merged with simple attributes from **data** structure.
 
 **headers:**
 
@@ -173,6 +173,8 @@ Defined health checks:
 
 ## Prerequisites
 
+### Mountebank - for stubbing and mocking
+
 Unit tests use stubs provided by [mountebank](http://www.mbtest.org) - really nice and practical framework.
 
 In order to make them working install node.js together with npm package manager. I recommend to use [Node version manager](https://github.com/creationix/nvm).
@@ -189,21 +191,61 @@ After that mountebank server should be available with command:
 
     $ mb
 
+### Redis - for requests persistance and statistics
+
+API Gateway uses [Redis](http://redis.io) key/value store for persisting requests and their responses and collecting statistics.
+There are tests that require Redis to be installed or accessible.
+
+Install redis in your system:
+
+    $ curl -O http://download.redis.io/releases/redis-2.8.17.tar.gz
+    $ tar -xvzf redis-2.8.17.tar.gz
+    $ cd redis-2.8.17.tar.gz
+    $ make
+    $ make install
+
+Then in your system the following commands should be visible: redis-server (start redis server), redis-cli (start redis command line shell).
+
+### Running dependencies
+
+When **./gradlew test** starts it automatically sets up dependencies: *mountebank* and *redis*. There are two gradle tasks:
+
+  * **runEnv** - starts servers required for testing:
+    * **MounteBank** - external API stubs
+    * **Redis** - key/value store
+  * **cleanEnv** - stops servers used for testing
+
+The assumption is that these servers are available on specific ports. If you change them please look at **stopEnv** task
+in *build.gradle* file. There is table of ports in there.
+
 ## Tests
 
 Please look at each groovy class from test folder. 
 Some of them, especially for functional testing with some real services, are annotated with @Ignore annotation (feature of [Spock](https://code.google.com/p/spock/) BDD testing framework).
-Remove or comment it in order to run them while testing.
+Remove or comment it out in order to run them while testing.
 
 Run tests with command:
 
     $ ./gradlew test
 
-The *test* task automatically runs *mountebank* server in the background. Posts stubs configuration.
+Above command automatically sets up dependencies: *MounteBank* and *Redis* for testing.  
+Inside *build.gradle* file there are two helpfull gradle tasks:
 
-When *test* is finished it is finalized with closing *mountebank* server.
+  * **runEnv** - starts servers required for testing:
+    * **MounteBank** - external API stubs
+    * **Redis** - key/value store
+  * **cleanEnv** - stops servers used for testing
 
-Following tasks from *build.gradle* do the job:
+The assumption is that these servers are available on specific ports.  
+If you change them please look at **stopEnv** task definition. There is a table of ports in there.
+
+    task stopEnv(type: FreePorts) {
+      // port: 2525 - mb (MounteBank), 
+      // port: 6379 - redis-server (Redis data store)
+      ports = [2525, 6379]
+    }
+
+The following tasks from *build.gradle* do the job:
 
     startMounteBank - start mountebank server with *mb* shell command
     initMounteBank  - initialize stubs configuration with *./src/test/groovy/online4m/apigateway/si/test/imposter.json* file.
@@ -264,6 +306,33 @@ Every request's id is stored in sorted set (by timestamp).
 To get log of last 20 requests:
 
     $ redis-cli> zrange request-log 0 20
+
+# Async processing
+
+Async processing starts when mode=ASYNC.
+As immediate result APIGateway returns success code, if async processing started successfully and URL to ask for ultimate result.
+
+Internally:
+  * CallerService.invoke() method calls
+    * private method that returns Observable (RxJava) with one result.
+    * then
+    * subscribes to observable in order to process response when external API finishes
+    * then
+    * returns simple Response with success and URL to ask for final response
+
+# Commands to be used while developing
+
+Test synchronous external service invocation:
+
+    curl -X POST -H "Content-Type: application/json" -d@./src/test/groovy/online4m/apigateway/si/test/testdata.json http://localhost:5050/api/call
+
+Test asynchronous external service invocation
+
+    curl -X POST -H "Content-Type: application/json" -d@./src/test/groovy/online4m/apigateway/si/test/testdataasync.json http://localhost:5050/api/call
+
+Load test. Change **-c** from 1 to more clients. Change **-r** from 1 to more repetition.
+
+    siege -c 1 -r 1 -H 'Content-Type: application/json' 'http://localhost:5050/api/call POST < ./src/test/groovy/online4m/apigateway/si/test/testdata.json'
 
 # TODO:
 
