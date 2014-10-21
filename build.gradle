@@ -53,9 +53,7 @@ dependencies {
 }
 
 watch {
-  println "WATCH STARTED"
   groovy {
-    println "GROOVY WATCH"
     files fileTree(dir: "src/main/groovy", include: "**/*.groovy")
     tasks "classes"
   }
@@ -87,8 +85,9 @@ installApp {
 }
 
 task startMounteBank(type: ExecWait) {
-  command "mb"
-  ready "point your browser to http://localhost:2525"
+  command "mb --loglevel error"
+  //ready "point your browser to http://localhost:2525"
+  ready ""
   directory "."
 }
 
@@ -97,6 +96,7 @@ task initStubs(dependsOn: "startMounteBank", type: ExecWait) {
   //command 'curl -X POST -d {"port":4545,"protocol":"http"}  http://localhost:2525/imposters'
   directory "."
   logOutput true
+  requiredActivePort 2525
 }
 
 task startRedis(type: ExecWait) {
@@ -117,17 +117,28 @@ initStubs.mustRunAfter stopEnv
 startRedis.mustRunAfter stopEnv
 
 task cleanEnv(dependsOn: "stopEnv") {
-  description "Stop servers used for testing"
+  description "Stop servers used for testing and development"
 }
 
-task runEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
-  description "Start servers required for testing: MounteBank (external API stubs), Redis key/value store"
+task runEnv(dependsOn: [stopEnv, initStubs, startRedis]) << {
+  description "Start servers required for development: MounteBank (external API stubs), Redis key/value store"
+}
+
+
+task runTestEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
+  description "Start servers required for testing: MounteBank and Redis"
 }
 
 // Important: before running any test initialize environment, so run server with stubs and redis key/value store
 // When tests are finished clean environment. Shutdown stubs server and redis key/value store.
-test.dependsOn runEnv
+test.dependsOn runTestEnv
 test.finalizedBy cleanEnv
+
+// Run tests in parallel.
+def forks = Math.max(2, (int)(Runtime.runtime.availableProcessors() / 2))
+test {
+  maxParallelForks = forks
+}
 
 /**
  *  Task for running external tool and waiting for it.
@@ -138,8 +149,25 @@ class ExecWait extends DefaultTask {
   String ready
   String directory
   Boolean logOutput = false
+  Integer requiredActivePort
 
   @TaskAction def spawnProcess() {
+    if (requiredActivePort) {
+      boolean running = false
+      for(int i=0; i < 3; i++) {
+        def cmd = "lsof -Fp -i :$requiredActivePort"
+        def process = cmd.execute()
+        process.in.eachLine { line ->
+          running = true
+        }
+        if (!running) {
+          sleep(2000)
+        }
+        else {
+          break
+        }
+      }
+    }
     ProcessBuilder builder = new ProcessBuilder(command.split(" "))
     builder.redirectErrorStream(true)
     builder.directory(new File(directory))

@@ -4,3 +4,4 @@ build
 .gradle
 out.json
 src/test/resources/hipchat.properties
+dump.rdb

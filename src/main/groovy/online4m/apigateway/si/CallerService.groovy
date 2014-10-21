@@ -40,7 +40,8 @@ class CallerService {
   // execControl - ratpack execution control
   private final ExecControl execControl
 
-  @Inject CallerService(ExecControl execControl, JedisDS jedisDS, CallerServiceCtx csCtx) {
+  @Inject 
+  CallerService(ExecControl execControl, JedisDS jedisDS, CallerServiceCtx csCtx) {
     this.execControl = execControl
     this.jedisDS = jedisDS
     this.csCtx = csCtx
@@ -54,6 +55,7 @@ class CallerService {
     if (!(data instanceof Map)) {
       return new Response(false, "SI_ERR_WRONG_INPUT", "Wrong input data format")
     }
+
     if (!data.method || !data.mode || !data.format || !data.url) {
       def missingAttrs = []
       data.method ?: missingAttrs.add("method")
@@ -80,19 +82,14 @@ class CallerService {
    *  @param bodyText - not parsed body text
    */
   Response invoke(String bodyText) {
-    Jedis jedis = null
     try {
-      if (jedisDS.isOn()) {
-        jedis = jedisDS.getResource()
-      }
-      
       def slurper = new JsonSlurper()
       def data = slurper.parseText(bodyText)
       log.debug("INPUT DATA TYPE: ${data?.getClass()}")
       log.debug("INPUT DATA: ${data}")
       Response response = validate(data)
       if (response?.success) {
-        response = invoke(Request.build(data), jedis)
+        response = invoke(Request.build(data))
         log.debug("INVOKE FINISHED")
       }
       else if (!response) {
@@ -116,9 +113,6 @@ class CallerService {
       return new Response(false, "SI_EXCEPTION", "Exception: ${ex.getMessage()}")
     }
     finally {
-      if (jedis) {
-        jedisDS.returnResource(jedis)
-      }
     }
   }
 
@@ -134,10 +128,12 @@ class CallerService {
    *  @param request - request with attributes required to call external API
    *  @param jedis - Redis connection, unique instance for the given invocation, taken out of JedisPool
    */
-  Response invoke(Request request, Jedis jedis = null) {
+  Response invoke(Request request) {
     log.debug("REQUEST: ${request}")
 
-    if (jedis) {
+    if (jedisDS && jedisDS.isOn()) {
+      Jedis jedis = jedisDS.getResource()
+
       jedis.hset("request:${request.uuid}", "request", JsonOutput.toJson(request))
 
       Date dt = new Date()
@@ -149,6 +145,7 @@ class CallerService {
       jedis.incr("usage/year:${dt.getAt(Calendar.YEAR)}/month:${dt.getAt(Calendar.MONTH)+1}")
       jedis.incr("usage/year:${dt.getAt(Calendar.YEAR)}/month:${dt.getAt(Calendar.MONTH)+1}/day:${dt.getAt(Calendar.DAY_OF_MONTH)}")
 
+      jedisDS.returnResource(jedis)
     }
 
     Response response = null
@@ -182,8 +179,10 @@ class CallerService {
       response.uuid = request.uuid
     }
 
-    if (jedis && response) {
+    if (jedisDS && jedisDS.isOn() && response) {
+      Jedis jedis = jedisDS.getResource()
       jedis.hset("request:${request.uuid}", "response", JsonOutput.toJson(response))
+      jedisDS.returnResource(jedis)
     }
 
     return response
@@ -221,6 +220,13 @@ class CallerService {
         }
         return r
       }
+    }
+
+    if (http) {
+      log.debug("HTTP C: ${http.getClass()}")
+      log.debug("HTTP C2: ${http.getClient()?.getClass()}, ${http.getClient()?.toString()}")
+      log.debug("HTTP C3: ${http.getClient().getConnectionManager().getClass()}" )
+      http.shutdown()
     }
 
     if (result) {
