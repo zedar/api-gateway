@@ -86,14 +86,22 @@ installApp {
 
 task startMounteBank(type: ExecWait) {
   command "mb --loglevel error"
-  //ready "point your browser to http://localhost:2525"
   ready ""
   directory "."
 }
 
+// Uncomment next task definition only when you base on mountebank with following fix applied:
+// https://github.com/bbyars/mountebank/commit/a57155620070ec14bd51178995a1ee678a81b905
+/* task startMounteBank(type: ExecWait) { */
+/*   command "../mountebank/bin/mb" */
+/*   ready "point your browser to http://localhost:2525" */
+/*   ready "" */
+/*   directory "." */
+/* } */
+
+
 task initStubs(dependsOn: "startMounteBank", type: ExecWait) {
   command "curl -X POST -d@./src/test/groovy/online4m/apigateway/si/test/imposter.json http://localhost:2525/imposters"
-  //command 'curl -X POST -d {"port":4545,"protocol":"http"}  http://localhost:2525/imposters'
   directory "."
   logOutput true
   requiredActivePort 2525
