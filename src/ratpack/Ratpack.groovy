@@ -26,6 +26,7 @@ import online4m.apigateway.health.CallerServiceHealthCheck
 import online4m.apigateway.si.CallerModule
 import online4m.apigateway.si.CallerService
 import online4m.apigateway.si.CallerServiceAsync
+import online4m.apigateway.si.QueryServiceAsync
 import online4m.apigateway.si.Request
 import online4m.apigateway.si.Response
 import online4m.apigateway.si.Utils
@@ -142,6 +143,13 @@ ratpack {
       post("call3") { CallerService callerService ->
         Response response = callerService.invoke(request.body.text)
         render JsonOutput.toJson(response)
+      }
+
+      get("call/response/:uuid") { QueryServiceAsync queryService ->
+        def suuid = pathTokens["uuid"]
+        queryService.getResponseRx(suuid).single().subscribe() { Response response ->
+          render JsonOutput.toJson(response)
+        }
       }
 
       get("bycontent") {

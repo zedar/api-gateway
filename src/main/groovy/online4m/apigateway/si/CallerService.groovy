@@ -112,8 +112,6 @@ class CallerService {
       ex.printStackTrace()
       return new Response(false, "SI_EXCEPTION", "Exception: ${ex.getMessage()}")
     }
-    finally {
-    }
   }
 
   /**
@@ -405,32 +403,37 @@ class CallerService {
       return r
     }
 
+    // Fork further execution
     execControl.fork(new Action<Execution>() {
       public void execute(Execution execution) throws Exception {
         ExecControl ec = execution.getControl()
         ec.blocking {
-          return postJson(url, headersToSet, inputData)
+          // build context for async response
+          def responseCtx = new Expando()
+          responseCtx.uuid = uuid
+          responseCtx.response = postJson(url, headersToSet, inputData)
+          if (!responseCtx.response.uuid) {
+            responseCtx.response.uuid = uuid
+          }
+          return responseCtx
         }
-        .then {
-          log.debug("POST JSON ASYNC RESPONSE: ${it.toString()}")
+        .then { responseCtx ->
+          log.debug("POST JSON ASYNC RESPONSE: uuid: ${responseCtx.uuid}, response: ${responseCtx.response?.toString()}")
+          // save response in redis
+          // callback has an access to service context, so jedisDS is visible
+          if (jedisDS.isOn()) {
+            Jedis jedis = jedisDS.getResource()
+            jedis.hset("request:${responseCtx.uuid}", "responseAsync", JsonOutput.toJson(responseCtx.response))
+            jedisDS.returnResource(jedis)
+          }
         }
       }
     })
-    /* observe(execControl.blocking{ */
-    /*   return postJson(url, headersToSet, inputData) */
-    /* }) */
-    /* .single().subscribe() { Response response -> */
-    /*   // store response in hash set */
-    /*   log.debug("POST JSON ASYNC RESPONSE: ${response.toString()}") */
-    /*   if (jedis && response) { */
-    /*     jedis.hset("request:${uuid}", "asyncresponse", JsonOutput.toJson(response)) */
-    /*   } */
-    /* } */
 
     String serverUrl = this.csCtx.serverUrl
     log.debug("LAUNCHCONFIG PUB ADDR: ${serverUrl}")
     def jsonData = [
-      location: serverUrl + "/api/asyncresponse/${uuid.toString()}"
+      location: serverUrl + "/api/call/response/${uuid.toString()}"
     ]
     // Prepare confirmation (ack) response
     Response r = new Response()

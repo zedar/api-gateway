@@ -12,6 +12,8 @@ class CallerModule extends AbstractModule {
   protected void configure() {
     bind(CallerService.class).in(Scopes.SINGLETON)
     bind(CallerServiceAsync.class).in(Scopes.SINGLETON)
+    bind(QueryService.class).in(Scopes.SINGLETON)
+    bind(QueryServiceAsync.class).in(Scopes.SINGLETON)
   }
 
   @Provides @Singleton

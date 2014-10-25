@@ -13,7 +13,7 @@ import rx.Observable
 
 @Slf4j
 class CallerServiceAsync {
-  private final ExecControl execControl
+  private final ExecControl   execControl
   private final CallerService callerService
 
   @Inject CallerServiceAsync(ExecControl execControl, CallerService callerService) {
@@ -32,4 +32,5 @@ class CallerServiceAsync {
       return callerService.invoke(bodyText)
     })
   }
+
 }
