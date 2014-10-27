@@ -74,13 +74,23 @@ ratpack {
         String serverUrl = csCtx.serverUrl
         // IMPORTANT: element of structure cannot be keyword like "call" because then Groovy tries to call it.
         def links = [
-          _links: [
-            self: [
-              href: serverUrl + "/api"
+          title:  "Get list of all available APIs",
+          href:   serverUrl + "/api",
+          links: [
+            "invoke": [
+              href:   serverUrl + "/api/invoke",
+              type:   "api",
+              title:  "POST request and invoke external API"
             ],
-            "call-api": [
-              href: serverUrl + "/api/call",
-              title: "Call external API"
+            "request": [
+              href:   serverUrl + "/api/invoke/request/{id}",
+              type:   "api",
+              title:  "GET request, identified by {id}, that initialized external API call"
+            ],
+            "response": [
+              href:   serverUrl + "/api/invoke/response/{id}",
+              type:   "api",
+              title:  "GET response, identified by {id}, that is result of external API call"
             ],
             "health-checks": [
               href: serverUrl + "/api/health-checks",
@@ -98,11 +108,14 @@ ratpack {
           json {
             render JsonOutput.prettyPrint(JsonOutput.toJson(links))
           }
-          type("application/hal+json") {
+          type("application/vnd.api+json") {
             render JsonOutput.prettyPrint(JsonOutput.toJson(links))
           }
           xml {
-            render Utils.buildXmlString(links)
+            def api = [
+              api: links
+            ]
+            render Utils.buildXmlString(api)
           }
         }
       }

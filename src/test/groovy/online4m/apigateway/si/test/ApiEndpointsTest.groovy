@@ -1,5 +1,7 @@
 package online4m.apigateway.si.test
 
+import java.util.regex.Pattern
+
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.util.XmlSlurper
@@ -16,7 +18,6 @@ import online4m.apigateway.si.Utils
 import spock.lang.Specification
 import spock.lang.Ignore
 
-@Ignore
 class ApiEndpointsTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
@@ -37,33 +38,47 @@ class ApiEndpointsTest extends Specification {
 
     def r = json.parseText(response.body.text)
     with(r) {
-      _links
-      _links.size() > 0
-      _links.self.href ==~ /.+\/api$/
+      href ==~ /.+\/api$/
+      title
+      links
+      links.size() == 5
+      links.invoke.href ==~ /.+\/api\/invoke$/
+      links.invoke.type == "api"
+      links.request.href ==~ /.+\/api\/invoke\/request\/\{id\}$/
+      links.request.type == "api"
+      links.response.href ==~ /.+\/api\/invoke\/response\/\{id\}$/
+      links.response.type == "api"
     }
   }
 
-  def "Get API endpoints in HAL+JSON format"() {
+  def "Get API endpoints in vnd.api+json format - json-api.org"() {
     given:
     def json = new JsonSlurper()
 
     when:
     requestSpec { RequestSpec requestSpec ->
-      requestSpec.headers.set("Accept", "application/hal+json")
+      requestSpec.headers.set("Accept", "application/vnd.api+json")
     }
     get("api")
 
     then:
-    response.headers.get("Content-Type") == "application/hal+json"
+    response.headers.get("Content-Type") == "application/vnd.api+json"
 
     def r = json.parseText(response.body.text)
     with(r) {
-      _links
-      _links.size() > 0
-      _links.self.href ==~ /.+\/api$/
+      href ==~ /.+\/api$/
+      title
+      links
+      links.size() == 5
+      links.invoke.href ==~ /.+\/api\/invoke$/
+      links.invoke.type == "api"
+      links.request.href ==~ /.+\/api\/invoke\/request\/\{id\}/
+      links.request.type == "api"
+      links.response.href ==~ /.+\/api\/invoke\/response\/\{id\}/
+      links.response.type == "api"
     }
   }
-
+  
   def "Get API endpoints in XML format"() {
     given:
     def xml = new XmlSlurper()
@@ -79,10 +94,18 @@ class ApiEndpointsTest extends Specification {
 
     def x = xml.parseText(response.body.text)
     def r = Utils.buildJsonEntity(x)
-    with (r) {
-      _links
-      _links.size() > 0
-      _links[0].self.href ==~ /.+\/api$/
+    r.api
+    with (r.api) {
+      href ==~ /.+\/api$/
+      title
+      links
+      links.size() == 5
+      links.invoke.href ==~ /.+\/api\/invoke$/
+      links.invoke.type == "api"
+      links.request.href ==~ /.+\/api\/invoke\/request\/\{id\}/
+      links.request.type == "api"
+      links.response.href ==~ /.+\/api\/invoke\/response\/\{id\}/
+      links.response.type == "api"
     }
   }
 }

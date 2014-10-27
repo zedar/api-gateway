@@ -27,10 +27,6 @@ class Response {
     this.uuid = uuid
   }
 
-  UUID getUuid() {
-    return this.uuid
-  }
-
   static Response build(Map data) {
     Response response = new Response()
     data.inject(response) {res, key, value ->

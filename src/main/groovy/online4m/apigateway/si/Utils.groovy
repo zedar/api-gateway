@@ -141,31 +141,25 @@ class Utils {
     if (!xml) {
       return null
     }
-    // declare closure *jsonBuilder* to be visible for recursive calling
-    def jsonbuilder
-    jsonbuilder = {node, obj1 ->
+    
+    def jsonBuilder
+    jsonBuilder = { node ->
       def childNodes = node.childNodes()
       if (!childNodes.hasNext()) {
-        obj1."${node.name()}" = node.text()
+        return node.text()
       }
       else {
-        def col = []
-        childNodes.each{
-          def obj2 = new Expando()
-          jsonbuilder(it, obj2)
-          col.add(obj2)
+        def map = [:]
+        childNodes.each {
+          map[it.name()] = jsonBuilder(it)
         }
-        if (col.size() > 1) {
-          obj1."${node.name()}" = col
-        }
-        else {
-          obj1."${node.name()}" = col[0]
-        }
+        return map
       }
     }
 
-    def jsonEntity = new Expando()
-    jsonbuilder(xml, jsonEntity)
+    def jsonEntity = [
+      (xml.name()): jsonBuilder(xml)
+    ]
 
     log.debug("RESPONSE jsonEntity: ${jsonEntity.toString()}")
     log.debug("RESPONSE TO JSON: ${JsonOutput.toJson(jsonEntity)}")

@@ -22,65 +22,97 @@ API Gateway, as microservice, is used by [online4m.com](https://www.online4m.com
 
 # API specification
 
+API specification tends to be inline with [json:api](http://jsonapi.org/format/) standard.
+
+## HTTP headers
+
+**GET**
+
+    Accept: application/json | application/vnd.api+json
+
+**POST**
+
+    Content-Type: application/json | application/vnd.api+json
+    Accept: application/json | application/vnd.api+json
+
 ## Endpoints
 
 ### /api
 
-Lists all available APIs
+Get list of all available APIs
 
-**Method:** GET
-**Content-Type:** application/json or application/hal+json
+**Method:** GET  
+**Accept:** application/json or application/vnd.api+json  
+**HTTP return codes:**
 
-Example call:
+  * 200 - OK
 
-    $ curl -X GET -H "Accept: application/hal+json" http://localhost:5050/api
 
-or
-    $ curl -X GET -H "Accept: application/json" http://localhost:5050/api
-
-Response:
+#### Output message format
 
     {
-      "_links": {
-          "self": {
-              "href": "http://localhost:5050/api"
+      "title": "Get list of all available APIs",
+      "href": "http://localhost:5050/api",
+      "links": {
+          "invoke": {
+            "href": "http://localhost:5050/api/invoke",
+            "type": "api",
+            "title": "POST request and invoke external API"
           },
-          "call-api": {
-              "href": "http://localhost:5050/api/call",
-              "title": "Call external API"
+          "request": {
+            "href":   "http://localhost:5050/api/invoke/request/{id}",
+            "type":   "api",
+            "title":  "GET request, identified by {id}, that initialized external API call"
+          },
+          "response": {
+            "href": "http://localhost:5050/api/invoke/response/{id}",
+            "type": "api",
+            "title": "GET response, identified by {id}, that is result of external API call"
           },
           "health-checks": {
-              "href": "http://localhost:5050/api/health-checks",
-              "title": "Run all health checks"
+            "href": "http://localhost:5050/api/health-checks",
+            "type": "monitoring",
+            "title": "Run all health checks"
           },
           "health-check-named": {
-              "href": "http://localhost:5050/api/call/health-check/:name",
-              "templated": true,
-              "title": "Available: apigateway"
+            "href": "http://localhost:5050/api/call/health-check/{name}",
+            "type": "monitoring",
+            "title": "Available: apigateway"
           }
       }
     }
 
-### /api/call
+### /api/invoke
 
-Call external API.
+Invoke external API either synchronously or asynchronously. 
+Use diverse HTTP methods and formats for API invocations.
 
-**Method:** POST
-**Content-Type:** JSON
-**Input Data Format:**
+**Method:** POST  
+**Content-Type:** application/json or application/vnd.api+json  
+**Accept:** application/json or application/vnd.api+json  
+**HTTP return codes:**
+
+  * 200 - OK
+
+#### Input message format
 
     {
-      "method":   "GET|POST|PUT|DELETE",
-      "mode":     "SYNC|ASYNC|EVENT",
-      "format":   "JSON|XML|URLENC",
-      "url":      "URI OF EXTERNAL ENDPOINT",
-      "headers":  JSON,
-      "data":     JSON
+      "request": {
+        "id":       "Universal Unique Identifier (UUID)",
+        "method":   "GET|POST|PUT|DELETE",
+        "mode":     "SYNC|ASYNC|EVENT",
+        "format":   "JSON|XML|URLENC",
+        "url":      "URI OF EXTERNAL ENDPOINT",
+        "headers":  JSON,
+        "data":     JSON
+      }
     }
+
+where **request** attributes are:
 
 **method:**
 
-  * Currently supported are: **GET** and **POST**
+  * HTTP method to be used for external API call
 
 **mode:**
   
@@ -113,15 +145,141 @@ Call external API.
 
 **data:**
 
-  * JSON either with list of query parameters or request body content.
+  * JSON, either with list of query parameters or request body content.
 
-#### Example: HipChat - get history of chats
+#### Output message format
+
+    {
+      "response": {
+        "success":        "true|false",
+        "errorCode":      "0 if no error, else otherwise",
+        "errorDescr":     "Error description",
+        "data":           JSON WITH EXTERNAL API OUTPUT,
+        "httpStatusCode": "HTTP status code from external API invoke",
+        "id":             "Universal Unique Identifier (UUID)",
+        "href":           "http://localhost:5050/api/invoke/response/{id}",
+        "links": {
+          "request": {
+            "href":   "http://localhost:5050/api/invoke/request/{id}"
+          }
+        }
+      }
+    }
+
+### /api/call/request/{id}
+
+Get request that started invocation given by {id}.
+
+**Method:** GET  
+**Accept:** application/json or application/vnd.api+json  
+**HTTP return codes:**
+
+  * 200 - OK
+
+#### Output message format
+
+    {
+      "request": {
+        "id":       "Universal Unique Identifier (UUID)",
+        "method":   "GET|POST|PUT|DELETE",
+        "mode":     "SYNC|ASYNC|EVENT",
+        "format":   "JSON|XML|URLENC",
+        "url":      "URI OF EXTERNAL ENDPOINT",
+        "headers":  JSON,
+        "data":     JSON,
+        "href":     "http://localhost:5050/api/invoke/request/{id}",
+        "links": {
+          "response": {
+            "href": "http://localhost:5050/api/invoke/response/{id}"
+          }
+        }
+      }
+    }
+
+### /api/call/response/{id}
+
+Get response from external API invocation given by {id}.
+If *mode*=SYNC, response with external API output data is returned inside */api/call* response.
+If *mode*=ASYNC, response could be acknowledgment message (when async call has not been finished) or 
+response from external API call (if async processing has finished).
+
+**Method:** GET  
+**Accept:** application/json or application/vnd.api+json  
+**HTTP return codes:**
+
+  * 200 - OK
+
+#### Output message format
+
+Response when only acknowlegment is available.
+
+    {
+      "response": {
+        "success":        "true|false",
+        "errorCode":      "0 if no error, else otherwise",
+        "errorDescr":     "Error description",
+        "httpStatusCode": "HTTP status code from external API invoke",
+        "id":             "Universal Unique Identifier (UUID)",
+        "href":           "http://localhost:5050/api/invoke/response/{id}",
+        "links": {
+          "request": {
+            "href":   "http://localhost:5050/api/invoke/request/{id}"
+          }
+        }
+      }
+    }
+
+Response when external API has finished and output is available.
+It contains *data* attribute with JSON representation of external API output.
+
+    {
+      "response": {
+        "success":        "true|false",
+        "errorCode":      "0 if no error, else otherwise",
+        "errorDescr":     "Error description",
+        "data":           JSON WITH EXTERNAL API OUTPUT,
+        "httpStatusCode": "HTTP status code from external API invoke",
+        "id":             "Universal Unique Identifier (UUID)",
+        "href":           "http://localhost:5050/api/invoke/response/{id}",
+        "links": {
+          "request": {
+            "href":   "http://localhost:5050/api/invoke/request/{id}"
+          }
+        }
+      }
+    }
+
+### api/health-checks
+
+Run all health checks and return their values.
+
+**Method:** GET
+
+### api/health-check/:name
+
+Run health check defined by the given :name.
+
+**Method:** GET
+
+Defined health checks:
+
+  * *apigateway*
+
+## Example API calls
+
+### Get API endpoints
+
+    $ curl -X GET -H "Accept: application/vnd.api+json" http://localhost:5050/api
+or
+    $ curl -X GET -H "Accept: application/json" http://localhost:5050/api
+
+### Example: HipChat - get history of chats
 
 Example HipChat API call:
 
     $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=YOUR_TOKEN", "data": {"max-results": {"l": 10}}}' -i http://localhost:5050/api/call
 
-#### Example: Twitter query with OAUTH authorization
+### Example: Twitter query with OAUTH authorization
 
 Before any API call you have to register your application in twitter. By doing this you get unique client id and client secret.
 These attributes are needed to ask for access token. Access token is used in all subsequent api calls.
@@ -153,21 +311,8 @@ and invocation:
 
     $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.twitter.com/1.1/search/tweets.json", "headers": {"Authorization": " Bearer ACCESS_TOKEN_URLENCODED"}, "data": {"q": "ratpackweb"}' -i http://localhost:5050/api/call
 
-### api/health-checks
 
-Run all health checks and return their values.
 
-**Method:** GET
-
-### api/health-check/:name
-
-Run health check defined by the given :name.
-
-**Method:** GET
-
-Defined health checks:
-
-  * *apigateway*
 
 # Run Tests
 
