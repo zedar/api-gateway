@@ -393,7 +393,7 @@ If you change them please look at **stopEnv** task definition. There is a table 
 The following tasks from *build.gradle* do the job:
 
     startMounteBank - start mountebank server with *mb* shell command
-    initMounteBank  - initialize stubs configuration with *./src/test/groovy/online4m/apigateway/si/test/imposter.json* file.
+    initMounteBank  - initialize stubs configuration with *./src/test/resources/imposter.json* file.
     testFinished    - kill spwaned processes attached to mountebank ports
 
 # Key/value data storage
@@ -469,15 +469,15 @@ Internally:
 
 Test synchronous external service invocation:
 
-    curl -X POST -H "Content-Type: application/json" -d@./src/test/groovy/online4m/apigateway/si/test/testdata.json http://localhost:5050/api/call
+    curl -X POST -H "Content-Type: application/json" -d@./src/test/resources/testdata.json http://localhost:5050/api/call
 
 Test asynchronous external service invocation
 
-    curl -X POST -H "Content-Type: application/json" -d@./src/test/groovy/online4m/apigateway/si/test/testdataasync.json http://localhost:5050/api/call
+    curl -X POST -H "Content-Type: application/json" -d@./src/test/resources/testdataasync.json http://localhost:5050/api/call
 
 Load test. Change **-c** from 1 to more clients. Change **-r** from 1 to more repetition.
 
-    siege -c 1 -r 1 -H 'Content-Type: application/json' 'http://localhost:5050/api/call POST < ./src/test/groovy/online4m/apigateway/si/test/testdata.json'
+    siege -c 1 -r 1 -H 'Content-Type: application/json' 'http://localhost:5050/api/call POST < ./src/test/resources/testdata.json'
 
 # TODO:
 

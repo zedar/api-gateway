@@ -1,4 +1,4 @@
-package online4m.apigateway.si.test
+package online4m.apigateway.si.api
 
 import java.util.regex.Pattern
 
@@ -18,7 +18,7 @@ import online4m.apigateway.si.Utils
 import spock.lang.Specification
 import spock.lang.Ignore
 
-class ApiEndpointsTest extends Specification {
+class TopLevelApiTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
   RemoteControl remote = new RemoteControl(aut)

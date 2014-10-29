@@ -101,7 +101,7 @@ task startMounteBank(type: ExecWait) {
 
 
 task initStubs(dependsOn: "startMounteBank", type: ExecWait) {
-  command "curl -X POST -d@./src/test/groovy/online4m/apigateway/si/test/imposter.json http://localhost:2525/imposters"
+  command "curl -X POST -d@./src/test/resources/imposter.json http://localhost:2525/imposters"
   directory "."
   logOutput true
   requiredActivePort 2525

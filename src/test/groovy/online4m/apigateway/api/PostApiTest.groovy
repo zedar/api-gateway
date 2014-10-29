@@ -1,4 +1,4 @@
-package online4m.apigateway.si.test
+package online4m.apigateway.si.api
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
@@ -13,7 +13,7 @@ import ratpack.test.remote.RemoteControl
 import spock.lang.Specification
 import spock.lang.Ignore
 
-class RestPostApiTest extends Specification {
+class PostApiTest extends Specification {
   ApplicationUnderTest aut = new LocalScriptApplicationUnderTest("other.remoteControl.enabled": "true")
   @Delegate TestHttpClient client = TestHttpClients.testHttpClient(aut)
   RemoteControl remote = new RemoteControl(aut)
