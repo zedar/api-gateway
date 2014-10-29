@@ -150,10 +150,34 @@ class Utils {
       }
       else {
         def map = [:]
+        def list = []
         childNodes.each {
-          map[it.name()] = jsonBuilder(it)
+          if (!map.containsKey(it.name())) {
+            map[it.name()] = jsonBuilder(it)
+          }
+          else {
+            if (list.size() == 0) {
+              def e = [:]
+              e[it.name()] = map[it.name()]
+              list.add(e)
+            }
+            def ed = jsonBuilder(it)
+            def e = [:]
+            e[it.name()] = ed
+            list.add(e)
+          }
         }
-        return map
+        if (list.size() && map.size() > 1) {
+          // unconsistent xml and output json format. 
+          log.error("UNCONSISTENT XML FORMAT. Mix of entities and collections")
+          return map
+        }
+        else if (list.size()) {
+          return list
+        }
+        else {
+          return map
+        }
       }
     }
 

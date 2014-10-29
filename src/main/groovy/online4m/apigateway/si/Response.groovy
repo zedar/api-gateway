@@ -13,18 +13,22 @@ class Response {
   String  errorDescr = ""
   // statusCode - HTTP status code for external API call
   Integer statusCode = 200
-  // uuid - correlation UUID. Equals to request.uuid
+  // id - correlation UUID. Equals to request.uuid
   //        has to be private, because overriden set and get
-  private UUID uuid
+  private UUID id
   // data - JSON object with serialized output of external API call
   Object  data
+  // href - link to GET itself
+  String  href = ""
+  // links - map of links to related entities
+  Map links = [:]
 
-  void setUuid(String suuid) {
-    this.uuid = UUID.fromString(suuid)
+  void setId(String sid) {
+    this.id = UUID.fromString(sid)
   }
 
-  void setUuid(UUID uuid) {
-    this.uuid = uuid
+  void setId(UUID id) {
+    this.id = id
   }
 
   static Response build(Map data) {
@@ -33,7 +37,8 @@ class Response {
       if (res.hasProperty(key)) {
         res."${key}" = value
       }
-      return response
+      return res
     }
+    return response
   }
 }

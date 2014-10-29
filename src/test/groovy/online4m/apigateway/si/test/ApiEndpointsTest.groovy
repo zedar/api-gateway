@@ -35,7 +35,6 @@ class ApiEndpointsTest extends Specification {
 
     then:
     response.headers.get("Content-Type") == "application/json"
-
     def r = json.parseText(response.body.text)
     with(r) {
       href ==~ /.+\/api$/
@@ -44,9 +43,9 @@ class ApiEndpointsTest extends Specification {
       links.size() == 5
       links.invoke.href ==~ /.+\/api\/invoke$/
       links.invoke.type == "api"
-      links.request.href ==~ /.+\/api\/invoke\/request\/\{id\}$/
+      links.request.href ==~  /.+\/api\/invoke\/\{id\}\/request$/
       links.request.type == "api"
-      links.response.href ==~ /.+\/api\/invoke\/response\/\{id\}$/
+      links.response.href ==~ /.+\/api\/invoke\/\{id\}\/response$/
       links.response.type == "api"
     }
   }
@@ -72,9 +71,9 @@ class ApiEndpointsTest extends Specification {
       links.size() == 5
       links.invoke.href ==~ /.+\/api\/invoke$/
       links.invoke.type == "api"
-      links.request.href ==~ /.+\/api\/invoke\/request\/\{id\}/
+      links.request.href ==~ /.+\/api\/invoke\/\{id\}\/request$/
       links.request.type == "api"
-      links.response.href ==~ /.+\/api\/invoke\/response\/\{id\}/
+      links.response.href ==~ /.+\/api\/invoke\/\{id\}\/response$/
       links.response.type == "api"
     }
   }
@@ -102,9 +101,9 @@ class ApiEndpointsTest extends Specification {
       links.size() == 5
       links.invoke.href ==~ /.+\/api\/invoke$/
       links.invoke.type == "api"
-      links.request.href ==~ /.+\/api\/invoke\/request\/\{id\}/
+      links.request.href ==~ /.+\/api\/invoke\/\{id\}\/request$/
       links.request.type == "api"
-      links.response.href ==~ /.+\/api\/invoke\/response\/\{id\}/
+      links.response.href ==~ /.+\/api\/invoke\/\{id\}\/response$/
       links.response.type == "api"
     }
   }

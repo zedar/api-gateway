@@ -60,12 +60,12 @@ Get list of all available APIs
             "title": "POST request and invoke external API"
           },
           "request": {
-            "href":   "http://localhost:5050/api/invoke/request/{id}",
+            "href":   "http://localhost:5050/api/invoke/{id}/request",
             "type":   "api",
             "title":  "GET request, identified by {id}, that initialized external API call"
           },
           "response": {
-            "href": "http://localhost:5050/api/invoke/response/{id}",
+            "href": "http://localhost:5050/api/invoke/{id}/response",
             "type": "api",
             "title": "GET response, identified by {id}, that is result of external API call"
           },
@@ -157,16 +157,16 @@ where **request** attributes are:
         "data":           JSON WITH EXTERNAL API OUTPUT,
         "httpStatusCode": "HTTP status code from external API invoke",
         "id":             "Universal Unique Identifier (UUID)",
-        "href":           "http://localhost:5050/api/invoke/response/{id}",
+        "href":           "http://localhost:5050/api/invoke/{id}/response",
         "links": {
           "request": {
-            "href":   "http://localhost:5050/api/invoke/request/{id}"
+            "href":   "http://localhost:5050/api/invoke/{id}/request"
           }
         }
       }
     }
 
-### /api/call/request/{id}
+### /api/invoke/{id}/request
 
 Get request that started invocation given by {id}.
 
@@ -187,16 +187,16 @@ Get request that started invocation given by {id}.
         "url":      "URI OF EXTERNAL ENDPOINT",
         "headers":  JSON,
         "data":     JSON,
-        "href":     "http://localhost:5050/api/invoke/request/{id}",
+        "href":     "http://localhost:5050/api/invoke/{id}/request",
         "links": {
           "response": {
-            "href": "http://localhost:5050/api/invoke/response/{id}"
+            "href": "http://localhost:5050/api/invoke/{id}/response"
           }
         }
       }
     }
 
-### /api/call/response/{id}
+### /api/invoke/{id}/response
 
 Get response from external API invocation given by {id}.
 If *mode*=SYNC, response with external API output data is returned inside */api/call* response.
@@ -220,10 +220,10 @@ Response when only acknowlegment is available.
         "errorDescr":     "Error description",
         "httpStatusCode": "HTTP status code from external API invoke",
         "id":             "Universal Unique Identifier (UUID)",
-        "href":           "http://localhost:5050/api/invoke/response/{id}",
+        "href":           "http://localhost:5050/api/invoke/{id}/response",
         "links": {
           "request": {
-            "href":   "http://localhost:5050/api/invoke/request/{id}"
+            "href":   "http://localhost:5050/api/invoke/{id}/request"
           }
         }
       }
@@ -240,10 +240,10 @@ It contains *data* attribute with JSON representation of external API output.
         "data":           JSON WITH EXTERNAL API OUTPUT,
         "httpStatusCode": "HTTP status code from external API invoke",
         "id":             "Universal Unique Identifier (UUID)",
-        "href":           "http://localhost:5050/api/invoke/response/{id}",
+        "href":           "http://localhost:5050/api/invoke/{id}/response",
         "links": {
           "request": {
-            "href":   "http://localhost:5050/api/invoke/request/{id}"
+            "href":   "http://localhost:5050/api/invoke/{id}/request"
           }
         }
       }

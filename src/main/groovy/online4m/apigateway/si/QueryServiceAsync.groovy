@@ -20,16 +20,27 @@ class QueryServiceAsync {
     this.queryService = queryService
   }
 
-  Promise<Response> getResponse(String suuid) {
+  Promise<Response> getResponse(String sid) {
     return execControl.blocking {
-      return queryService.getResponse(suuid)
+      return queryService.getResponse(sid)
     }
   }
 
-  Observable<Response> getResponseRx(String suuid) {
+  Observable<Response> getResponseRx(String sid) {
     return observe(execControl.blocking {
-      return queryService.getResponse(suuid)
+      return queryService.getResponse(sid)
     })
   }
 
+  Promise<Request> getRequest(String sid) {
+    return execControl.blocking {
+      return queryService.getRequest(sid)
+    }
+  }
+
+  Observable<Request> getRequestRx(String sid) {
+    return observe(execControl.blocking {
+      return queryService.getRequest(sid)
+    })
+  }
 }

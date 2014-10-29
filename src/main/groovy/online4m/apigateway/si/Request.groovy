@@ -24,26 +24,45 @@ enum RequestFormat {
 
 @ToString @TupleConstructor
 class Request {
-  UUID          uuid
+  private UUID  id = UUID.randomUUID()
   RequestMethod method
   RequestMode   mode
   RequestFormat format
-  URL           url
+  private URL   url
   // HTTP request headers in form of key-value pairs. For example:
   //    "Authorization": "Bearer ACCESS_KEY"
   Map           headers
   // HTTP request data to be sent as either query attributes or body content
   Object        data
+  // href - link to GET itself
+  String        href = ""
+  // links - map of links to related entities
+  Map           links = [:]
+
+  void setId(String sid) {
+    if (!sid) {
+      this.id = UUID.randomUUID()
+    }
+    else
+      this.id = UUID.fromString(sid)
+  }
+
+  void setId(UUID id) {
+    this.id = id ?: UUID.randomUUID()
+  }
+
+  void setUrl(String surl) {
+    this.url = surl.toURL()
+  }
 
   static Request build(Map data) {
-    Request req = new Request()
-    req.uuid = data.uuid ? UUID.fromString(data.uuid) : UUID.randomUUID()
-    req.method = data.method as RequestMethod
-    req.mode = data.mode as RequestMode
-    req.format = data.format as RequestFormat
-    req.url = data.url.toURL()
-    req.headers = data.headers ?: [:]
-    req.data = data.data ?: []
-    return req
+    Request request = new Request()
+    data.inject(request) { req, key,value ->
+      if (req.hasProperty(key)) {
+        req."${key}" = value
+      }
+      return req
+    }
+    return request
   }
 }

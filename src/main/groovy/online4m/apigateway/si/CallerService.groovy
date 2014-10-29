@@ -132,11 +132,11 @@ class CallerService {
     if (jedisDS && jedisDS.isOn()) {
       Jedis jedis = jedisDS.getResource()
 
-      jedis.hset("request:${request.uuid}", "request", JsonOutput.toJson(request))
+      jedis.hset("request:${request.id}", "request", JsonOutput.toJson(request))
 
       Date dt = new Date()
 
-      jedis.zadd("request-log", dt.toTimestamp().getTime(), "request:${request.uuid}")
+      jedis.zadd("request-log", dt.toTimestamp().getTime(), "request:${request.id}")
 
       // increment statistics
       jedis.incr("usage/year:${dt.getAt(Calendar.YEAR)}")
@@ -164,7 +164,7 @@ class CallerService {
       response = postUrlEncoded(request.url, request.headers, request.data)
     }
     else if (request.mode == RequestMode.ASYNC && request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      response = postJsonAsync(request.uuid, request.url, request.headers, request.data)
+      response = postJsonAsync(request.id, request.url, request.headers, request.data)
     }
     else {
       response = new Response()
@@ -174,13 +174,19 @@ class CallerService {
     }
 
     if (response) {
-      response.uuid = request.uuid
+      response.id = request.id
     }
 
     if (jedisDS && jedisDS.isOn() && response) {
       Jedis jedis = jedisDS.getResource()
-      jedis.hset("request:${request.uuid}", "response", JsonOutput.toJson(response))
+      jedis.hset("request:${request.id}", "response", JsonOutput.toJson(response))
       jedisDS.returnResource(jedis)
+
+      String serverUrl = this.csCtx.serverUrl
+      response.href = serverUrl + "/api/invoke/${response.id.toString()}/response"
+      response.links["request"] = [
+        href: serverUrl + "/api/invoke/${response.id.toString()}/request"
+      ]
     }
 
     return response
@@ -393,7 +399,7 @@ class CallerService {
     }
   }
 
-  private Response postJsonAsync(UUID uuid, URL url, Map headersToSet, Map inputData) {
+  private Response postJsonAsync(UUID id, URL url, Map headersToSet, Map inputData) {
     // Construct response data with location to get final response
     if (!this.csCtx) {
       Response r = new Response()
@@ -410,35 +416,30 @@ class CallerService {
         ec.blocking {
           // build context for async response
           def responseCtx = new Expando()
-          responseCtx.uuid = uuid
+          responseCtx.id = id
           responseCtx.response = postJson(url, headersToSet, inputData)
-          if (!responseCtx.response.uuid) {
-            responseCtx.response.uuid = uuid
+          if (!responseCtx.response.id) {
+            responseCtx.response.id = id
           }
           return responseCtx
         }
         .then { responseCtx ->
-          log.debug("POST JSON ASYNC RESPONSE: uuid: ${responseCtx.uuid}, response: ${responseCtx.response?.toString()}")
+          log.debug("POST JSON ASYNC RESPONSE: uuid: ${responseCtx.id}, response: ${responseCtx.response?.toString()}")
           // save response in redis
           // callback has an access to service context, so jedisDS is visible
           if (jedisDS.isOn()) {
             Jedis jedis = jedisDS.getResource()
-            jedis.hset("request:${responseCtx.uuid}", "responseAsync", JsonOutput.toJson(responseCtx.response))
+            jedis.hset("request:${responseCtx.id}", "responseAsync", JsonOutput.toJson(responseCtx.response))
             jedisDS.returnResource(jedis)
           }
         }
       }
     })
 
-    String serverUrl = this.csCtx.serverUrl
-    log.debug("LAUNCHCONFIG PUB ADDR: ${serverUrl}")
-    def jsonData = [
-      location: serverUrl + "/api/call/response/${uuid.toString()}"
-    ]
     // Prepare confirmation (ack) response
     Response r = new Response()
     r.with {
-      (success, statusCode, data) = [true, 202, jsonData]
+      (success, statusCode) = [true, 202]
     }
     return r
   }

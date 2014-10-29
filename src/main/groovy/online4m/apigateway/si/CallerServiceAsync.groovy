@@ -16,7 +16,8 @@ class CallerServiceAsync {
   private final ExecControl   execControl
   private final CallerService callerService
 
-  @Inject CallerServiceAsync(ExecControl execControl, CallerService callerService) {
+  @Inject
+  CallerServiceAsync(ExecControl execControl, CallerService callerService) {
     this.execControl = execControl
     this.callerService = callerService
   }
@@ -32,5 +33,4 @@ class CallerServiceAsync {
       return callerService.invoke(bodyText)
     })
   }
-
 }

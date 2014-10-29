@@ -83,12 +83,12 @@ ratpack {
               title:  "POST request and invoke external API"
             ],
             "request": [
-              href:   serverUrl + "/api/invoke/request/{id}",
+              href:   serverUrl + "/api/invoke/{id}/request",
               type:   "api",
               title:  "GET request, identified by {id}, that initialized external API call"
             ],
             "response": [
-              href:   serverUrl + "/api/invoke/response/{id}",
+              href:   serverUrl + "/api/invoke/{id}/response",
               type:   "api",
               title:  "GET response, identified by {id}, that is result of external API call"
             ],
@@ -120,32 +120,38 @@ ratpack {
         }
       }
 
-      // get named health check
-      get("health-check/:name", new HealthCheckHandler())
-
-      // run all health checks
-      get("health-checks") { HealthCheckRegistry healthCheckRegistry ->
-        render healthCheckRegistry.runHealthChecks().toString()
-      }
-
       // call reactive way - RxJava
-      post("call") { CallerServiceAsync callerServiceAsync ->
+      post("invoke") { CallerServiceAsync callerServiceAsync ->
         callerServiceAsync.invokeRx(request.body.text).single().subscribe() { Response response ->
           log.debug "BEFORE JsonOutput.toJson(response)"
           //getResponse().status(201)
-          render JsonOutput.toJson(response)
+          render JsonOutput.prettyPrint(JsonOutput.toJson(response))
+        }
+      }
+
+      get("invoke/:id/request") { QueryServiceAsync queryService ->
+        def sid = pathTokens["id"]
+        queryService.getRequestRx(sid).single().subscribe() { Request request ->
+          render JsonOutput.prettyPrint(JsonOutput.toJson(request))
         }
       }
       
+      get("invoke/:id/response") { QueryServiceAsync queryService ->
+        def sid = pathTokens["id"]
+        queryService.getResponseRx(sid).single().subscribe() { Response response ->
+          render JsonOutput.prettyPrint(JsonOutput.toJson(response))
+        }
+      }
+
       // call with ratpack promise
-      post("call1") { CallerServiceAsync callerService ->
+      post("invoke1") { CallerServiceAsync callerService ->
         callerService.invoke(request.body.text).then {
           render JsonOutput.toJson(it)
         }
       }
 
       // call with ratpack blocking code (it is running in seperate thread)
-      post("call2") {CallerService callerService ->
+      post("invoke2") {CallerService callerService ->
         blocking {
           return callerService.invoke(request.body.text)
         }.then {
@@ -153,16 +159,18 @@ ratpack {
         }
       }
 
-      post("call3") { CallerService callerService ->
+      post("invoke3") { CallerService callerService ->
         Response response = callerService.invoke(request.body.text)
         render JsonOutput.toJson(response)
       }
 
-      get("call/response/:uuid") { QueryServiceAsync queryService ->
-        def suuid = pathTokens["uuid"]
-        queryService.getResponseRx(suuid).single().subscribe() { Response response ->
-          render JsonOutput.toJson(response)
-        }
+
+      // get named health check
+      get("health-check/:name", new HealthCheckHandler())
+
+      // run all health checks
+      get("health-checks") { HealthCheckRegistry healthCheckRegistry ->
+        render healthCheckRegistry.runHealthChecks().toString()
       }
 
       get("bycontent") {

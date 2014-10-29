@@ -15,21 +15,24 @@ import online4m.apigateway.ds.JedisDS
 class QueryService {
   // jedisDS - reference to Redis data source connection pool
   private final JedisDS jedisDS
+  // csCtx - common attributes for all service calls
+  private final CallerServiceCtx csCtx
 
   @Inject
-  QueryService(JedisDS jedisDS) {
+  QueryService(JedisDS jedisDS, CallerServiceCtx csCtx) {
     this.jedisDS = jedisDS
+    this.csCtx = csCtx
   }
 
   /**
    *  Convert uuid as string to UUID class and call main getResponse()
-   *  @param uuid - string representation of UUID
+   *  @param sid - string representation of UUID
    */
-  Response getResponse(String suuid) {
-    if (!suuid) {
+  Response getResponse(String sid) {
+    if (!sid) {
       return new Response(false, "SI_ERR_MISSING_UUID", "Missing service call unique identifier (UUID)")
     }
-    UUID uuid = UUID.fromString(suuid)
+    UUID uuid = UUID.fromString(sid)
     return getResponse(uuid)
   }
 
@@ -57,7 +60,14 @@ class QueryService {
 
       def slurper = new JsonSlurper()
       Map data = slurper.parseText(ra ?: r)
-      return Response.build(data)
+      Response response = Response.build(data)
+      
+      String serverUrl = this.csCtx.serverUrl
+      response.href = serverUrl + "/api/invoke/${response.id.toString()}/response"
+      response.links["request"] = [
+        href: serverUrl + "/api/invoke/${response.id.toString()}/request"
+      ]
+      return response
     }
     catch (JedisConnectionException ex) {
       ex.printStackTrace()
@@ -66,6 +76,62 @@ class QueryService {
     catch (Exception ex) {
       ex.printStackTrace()
       return new Response(false, "SI_EXCEPTION", "Exception: ${ex.getMessage()}")
+    }
+    finally {
+      if (jedis) {
+        jedisDS.returnResource(jedis)
+        jedis = null
+      }
+    }
+  }
+
+  /**
+   *  Get request that initialized external API call.
+   *  Convert string representation of UUID and invoke getResponse(uuid)
+   *  @param sid - string representation of UUID
+   */
+  Request getRequest(String sid) {
+    if (!sid) {
+      return null
+    }
+    UUID uuid = UUID.fromString(sid)
+    return getRequest(uuid)
+  }
+
+  /**
+   *  Get request that initialized external API call.
+   *  @param uuid - unique identifier of request
+   */
+  Request getRequest(UUID id) {
+    Jedis jedis
+    try {
+      if (!jedisDS || !jedisDS.isOn()) {
+        return null
+      }
+      jedis = jedisDS.getResource()
+      String r = jedis.hget("request:${id}", "request")
+      log.debug("REQUEST: ${r}")
+      jedisDS.returnResource(jedis)
+      jedis = null
+
+      def slurper = new JsonSlurper()
+      Map data = slurper.parseText(r)
+      Request request = Request.build(data)
+
+      String serverUrl = this.csCtx.serverUrl
+      request.href = serverUrl + "/api/invoke/${request.id.toString()}/request"
+      request.links["response"] = [
+        href: serverUrl + "/api/invoke/${request.id.toString()}/response"
+      ]
+      return request
+    }
+    catch (JedisConnectionException ex) {
+      ex.printStackTrace()
+      return null
+    }
+    catch (Exception ex) {
+      ex.printStackTrace()
+      return null
     }
     finally {
       if (jedis) {
