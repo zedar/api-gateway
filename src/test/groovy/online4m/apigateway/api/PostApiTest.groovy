@@ -1,4 +1,4 @@
-package online4m.apigateway.si.api
+package online4m.apigateway.api
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput

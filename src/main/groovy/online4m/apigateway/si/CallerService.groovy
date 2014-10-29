@@ -127,7 +127,7 @@ class CallerService {
    *  @param jedis - Redis connection, unique instance for the given invocation, taken out of JedisPool
    */
   Response invoke(Request request) {
-    log.debug("REQUEST: ${request}")
+    log.debug("REQUEST: ${request.getUrl()}")
 
     if (jedisDS && jedisDS.isOn()) {
       Jedis jedis = jedisDS.getResource()

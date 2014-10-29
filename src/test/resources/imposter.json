@@ -63,6 +63,27 @@
         "is": {
           "statusCode": "201",
           "headers": {
+            "Location": "http://localhost:4545/get_sync_json",
+            "Content-Type": "application/json"
+          },
+          "body": "{\"id\": \"101\"}",
+          "_behaviors": {
+            "wait": 3000
+          }
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "POST",
+          "path": "/post_async_json"
+        }
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "201",
+          "headers": {
             "Content-Type": "application/xml"
           },
           "body": "<customer><id>101</id><id>102</id></customer>"

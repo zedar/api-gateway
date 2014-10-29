@@ -31,10 +31,6 @@ class Utils {
   }
 
   /**
-   *  Normalize json object to contains JSON known and compatible data types
-   */
-
-  /**
    *  Extract query attributes from url and inputData
    *  @param url - URL given by caller. After this method call url must have query set to null
    *  @param inputData - map of attributes and its values. If attribute is complex (Map, List) it is automatically skipped

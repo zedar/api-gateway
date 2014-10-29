@@ -2,6 +2,7 @@ package online4m.apigateway.si
 
 import java.util.UUID
 
+import groovy.util.logging.Slf4j
 import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
@@ -22,13 +23,13 @@ enum RequestFormat {
   URLENC
 }
 
-@ToString @TupleConstructor
+@ToString @TupleConstructor @Slf4j
 class Request {
-  private UUID  id = UUID.randomUUID()
+  UUID  id = UUID.randomUUID()
   RequestMethod method
   RequestMode   mode
   RequestFormat format
-  private URL   url
+  URL   url 
   // HTTP request headers in form of key-value pairs. For example:
   //    "Authorization": "Bearer ACCESS_KEY"
   Map           headers
@@ -39,7 +40,7 @@ class Request {
   // links - map of links to related entities
   Map           links = [:]
 
-  void setId(String sid) {
+  public void setId(String sid) {
     if (!sid) {
       this.id = UUID.randomUUID()
     }
@@ -47,11 +48,7 @@ class Request {
       this.id = UUID.fromString(sid)
   }
 
-  void setId(UUID id) {
-    this.id = id ?: UUID.randomUUID()
-  }
-
-  void setUrl(String surl) {
+  public void setUrl(String surl) {
     this.url = surl.toURL()
   }
 

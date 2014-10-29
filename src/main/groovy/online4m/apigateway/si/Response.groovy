@@ -15,7 +15,7 @@ class Response {
   Integer statusCode = 200
   // id - correlation UUID. Equals to request.uuid
   //        has to be private, because overriden set and get
-  private UUID id
+  UUID id
   // data - JSON object with serialized output of external API call
   Object  data
   // href - link to GET itself
@@ -25,10 +25,6 @@ class Response {
 
   void setId(String sid) {
     this.id = UUID.fromString(sid)
-  }
-
-  void setId(UUID id) {
-    this.id = id
   }
 
   static Response build(Map data) {
