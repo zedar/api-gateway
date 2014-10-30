@@ -24,7 +24,7 @@ API Gateway microservice is used by [online4m.com](https://www.online4m.com/onli
 
 ## Invoke external REST API synchronously
 
-<img src="docs/images/APIGateway-SYNC.png" alt="Invoke external REST API synchronously" width="400">
+<img src="docs/images/APIGateway-SYNC.png" alt="Invoke external REST API synchronously" width="600">
 
 # API specification
 
