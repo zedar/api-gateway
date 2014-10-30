@@ -54,13 +54,14 @@ Request attributes:
 
 <img src="docs/images/APIGateway-GETREQ.png" alt="Get request that initialized invocation of external API" width="600">
 
-Get request for invocation defined by {id} UUID. 
+Get request for invocation defined by {id} UUID. Enrich request with links to itself and to its response.
 
 ## Get ack or final response of external API invocation
 
 <img src="docs/images/APIGateway-GETRES.png" alt="Get response of external API invocation" width="600">
 
 If external API has finished its final response will return. Otherwise acknowledgement response will come.
+Enrich response with links to itself and to its request.
 
 # API specification
 
