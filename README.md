@@ -16,7 +16,7 @@ Primary goals are:
 
 API Gateway is [*ratpack*](http://www.ratpack.io) based project. 
 All classes are written in [*Groovy*](http://groovy.codehaus.org).
-It uses [*Gradle*](http://www.gradle.org) build subsystem and tends to follow [HAL - Hypertext Application Language](http://stateless.co/hal_specification.html).
+It uses [*Gradle*](http://www.gradle.org) build subsystem and tends to follow [json:api](http://jsonapi.org/format/) standard.
 
 API Gateway, as microservice, is used by [online4m.com](https://www.online4m.com/online4m/info/howItWorks#howitworks) - pragmatic way to develop workflow driven applications.
 
