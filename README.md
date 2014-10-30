@@ -26,6 +26,30 @@ API Gateway microservice is used by [online4m.com](https://www.online4m.com/onli
 
 <img src="docs/images/APIGateway-SYNC.png" alt="Invoke external REST API synchronously" width="600">
 
+Request in JSON format is a body of POST request to **api/invoke** endpoint. 
+Response with external API output is a body of this endpoint result.
+
+Request attributes:
+
+  * mode=SYNC
+  * method=GET|POST|PUT|DELETE
+  * format=JSON|XML|URLENC
+
+
+## Invoke external REST API asynchronously
+
+<img src="docs/images/APIGateway-ASYNC.png" alt="Invoke external REST API asynchronously" width="600">
+
+Request in JSON format is a body of POST request to **api/invoke** endpoint. 
+Response is acknowledgment only. 
+External API is called in separate thread and its output could be retrieved by **api/invoke/{id}/response** endpoint.
+
+Request attributes:
+
+  * mode=ASYNC
+  * method=GET|POST|PUT|DELETE
+  * format=JSON|XML|URLENC
+
 # API specification
 
 API specification tends to be inline with [json:api](http://jsonapi.org/format/) standard.
