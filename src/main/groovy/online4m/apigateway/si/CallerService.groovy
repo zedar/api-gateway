@@ -148,23 +148,11 @@ class CallerService {
 
     Response response = null
 
-    if (request.mode == RequestMode.SYNC && request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
-      response = getJson(request.url, request.headers, request.data)
+    if (request.mode == RequestMode.SYNC) {
+      response = invokeSync(request)
     }
-    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      response =  postJson(request.url, request.headers, request.data)
-    }
-    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
-      response = getXml(request.url, request.headers, request.data)
-    }
-    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
-      response = postXml(request.url, request.headers, request.data)
-    }
-    else if (request.mode == RequestMode.SYNC && request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
-      response = postUrlEncoded(request.url, request.headers, request.data)
-    }
-    else if (request.mode == RequestMode.ASYNC && request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      response = postJsonAsync(request.id, request.url, request.headers, request.data)
+    else if (request.mode == RequestMode.ASYNC) {
+      response = invokeAsync(request)
     }
     else {
       response = new Response()
@@ -190,6 +178,86 @@ class CallerService {
     }
 
     return response
+  }
+
+  /**
+   *  Switch to corresponding method that invoces external API synchronously.
+   *  @param request to be send to external API
+   */
+  private Response invokeSync(Request request) {
+    Response response = null
+
+    if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
+      response = getJson(request.url, request.headers, request.data)
+    }
+    else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
+      response =  postJson(request.url, request.headers, request.data)
+    }
+    else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
+      response = getXml(request.url, request.headers, request.data)
+    }
+    else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
+      response = postXml(request.url, request.headers, request.data)
+    }
+    else if (request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
+      response = postUrlEncoded(request.url, request.headers, request.data)
+    }
+    else {
+      response = new Response()
+      response.with {
+        (success, errorCode, errorDescr) = [false, "SI_ERR_NOT_SUPPORTED_INVOCATION", "Not supported invocation mode", request.uuid]
+      }
+    }
+
+    return response
+  }
+
+  private Response invokeAsync(Request request) {
+    // Construct response data with location to get final response
+    if (!this.csCtx) {
+      Response r = new Response()
+      r.with {
+        (success, errorCode, errorDescr) = [false, "SI_NO_ACCESS_TO_PUBLIC_ADDRESS", "Unable to get access to main server's public address"]
+      }
+      return r
+    }
+
+    // Fork further execution
+    execControl.fork(new Action<Execution>() {
+      public void execute(Execution execution) throws Exception {
+        ExecControl ec = execution.getControl()
+        ec.blocking {
+          // build context for async response
+          def responseCtx = new Expando()
+          responseCtx.id = request.id
+
+          request.mode = RequestMode.SYNC
+          responseCtx.response = invokeSync(request)
+          
+          if (!responseCtx.response.id) {
+            responseCtx.response.id = request.id
+          }
+          return responseCtx
+        }
+        .then { responseCtx ->
+          log.debug("POST JSON ASYNC RESPONSE: uuid: ${responseCtx.id}, response: ${responseCtx.response?.toString()}")
+          // save response in redis
+          // callback has an access to service context, so jedisDS is visible
+          if (jedisDS.isOn()) {
+            Jedis jedis = jedisDS.getResource()
+            jedis.hset("request:${responseCtx.id}", "responseAsync", JsonOutput.toJson(responseCtx.response))
+            jedisDS.returnResource(jedis)
+          }
+        }
+      }
+    })
+
+    // Prepare confirmation (ack) response
+    Response r = new Response()
+    r.with {
+      (success, statusCode) = [true, 202]
+    }
+    return r
   }
 
   private Response getJson(URL url, Map headersToSet, Map inputData) {
@@ -397,50 +465,5 @@ class CallerService {
         return r
       }
     }
-  }
-
-  private Response postJsonAsync(UUID id, URL url, Map headersToSet, Map inputData) {
-    // Construct response data with location to get final response
-    if (!this.csCtx) {
-      Response r = new Response()
-      r.with {
-        (success, errorCode, errorDescr) = [false, "SI_NO_ACCESS_TO_PUBLIC_ADDRESS", "Unable to get access to main server's public address"]
-      }
-      return r
-    }
-
-    // Fork further execution
-    execControl.fork(new Action<Execution>() {
-      public void execute(Execution execution) throws Exception {
-        ExecControl ec = execution.getControl()
-        ec.blocking {
-          // build context for async response
-          def responseCtx = new Expando()
-          responseCtx.id = id
-          responseCtx.response = postJson(url, headersToSet, inputData)
-          if (!responseCtx.response.id) {
-            responseCtx.response.id = id
-          }
-          return responseCtx
-        }
-        .then { responseCtx ->
-          log.debug("POST JSON ASYNC RESPONSE: uuid: ${responseCtx.id}, response: ${responseCtx.response?.toString()}")
-          // save response in redis
-          // callback has an access to service context, so jedisDS is visible
-          if (jedisDS.isOn()) {
-            Jedis jedis = jedisDS.getResource()
-            jedis.hset("request:${responseCtx.id}", "responseAsync", JsonOutput.toJson(responseCtx.response))
-            jedisDS.returnResource(jedis)
-          }
-        }
-      }
-    })
-
-    // Prepare confirmation (ack) response
-    Response r = new Response()
-    r.with {
-      (success, statusCode) = [true, 202]
-    }
-    return r
   }
 }

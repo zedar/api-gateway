@@ -1,14 +1,15 @@
 API Gateway - unified access to REST or Web Services
 -----------------------------
 
-API Gateway could play a role of single entry point for invocation of diverse services, either REST or WebServices.
-Unifies a way, services are called. 
+API Gateway is intent to play a role of single entry point for invocation of diverse services, either REST or WebServices.
+Unifies a way of calling APIs. 
 Primary goals are: 
 
-* all requests have to be handled asynchronously (no thread blocking);
+* all requests are handled asynchronously (no thread blocking);
+* input and output data format is unified. Separation of data format between client and callable API;
 * it is REST API itself;
-* support diverse invocation modes: SYNC, ASYNC, EVENT;
-* distributed as microservice, defined in Sam Newmans's book *Building Microservices*:
+* support diverse invocation modes: SYNC, ASYNC, EVENT (fire and forget);
+* follow the rules of #microservices. Defined in Sam Newmans's book *Building Microservices*:
   * is small and focused on doing one thing well
   * is a seperate, independent process
   * communicates via language agnostic API
