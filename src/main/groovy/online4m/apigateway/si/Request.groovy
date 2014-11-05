@@ -7,7 +7,11 @@ import groovy.transform.ToString
 import groovy.transform.TupleConstructor
 
 enum RequestMethod {
-  POST, GET, PUT, DELETE
+  POST, 
+  GET, 
+  PUT, 
+  PATCH, 
+  DELETE
 }
 
 enum RequestMode {

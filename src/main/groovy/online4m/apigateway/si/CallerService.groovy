@@ -40,6 +40,7 @@ class CallerService {
   // execControl - ratpack execution control
   private final ExecControl execControl
 
+
   @Inject 
   CallerService(ExecControl execControl, JedisDS jedisDS, CallerServiceCtx csCtx) {
     this.execControl = execControl
@@ -194,17 +195,20 @@ class CallerService {
     if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
       response = getJson(request.url, request.headers, request.data)
     }
-    else if ([RequestMethod.POST, RequestMethod.PUT].find{ it == request.method } && request.format == RequestFormat.JSON) {
-      response = postOrPutJson(request.method, request.url, request.headers, request.data)
+    else if ([RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH].find{ it == request.method } && 
+                request.format == RequestFormat.JSON) {
+      response = sendJson(request.method, request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
       response = getXml(request.url, request.headers, request.data)
     }
-    else if ([RequestMethod.POST, RequestMethod.PUT].find { it == request.method } && request.format == RequestFormat.XML) {
-      response = postOrPutXml(request.method, request.url, request.headers, request.data)
+    else if ([RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH].find { it == request.method } && 
+                request.format == RequestFormat.XML) {
+      response = sendXml(request.method, request.url, request.headers, request.data)
     }
-    else if ([RequestMethod.POST, RequestMethod.PUT].find{ it == request.method } && request.format == RequestFormat.URLENC) {
-      response = postOrPutUrlEncoded(request.method, request.url, request.headers, request.data)
+    else if ([RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH].find{ it == request.method } && 
+                request.format == RequestFormat.URLENC) {
+      response = sendUrlEncoded(request.method, request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.DELETE) {
       response = del(request.url, request.headers, request.data)
@@ -268,6 +272,14 @@ class CallerService {
     return r
   }
 
+  /**
+   *  Map internal request method to groovyx.net.http.Method
+   *  @param method - RequestMethod enum
+   */
+  private def mapMethod(RequestMethod method) {
+    return groovyx.net.http.Method.valueOf(method.name())
+  }
+
   private Response getJson(URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
     def result = http.request(GET, JSON) { req ->
@@ -319,16 +331,18 @@ class CallerService {
     }
   }
 
-  private Response postOrPutJson(RequestMethod method, URL url, Map headersToSet, Map inputData) {
+  private Response sendJson(RequestMethod method, URL url, Map headersToSet, Map inputData) {
+    log.debug("method=${mapMethod(method)}")
+    
     def http = new HTTPBuilder(url)
-    def result = http.request((method == RequestMethod.POST ? POST : PUT) , JSON) { req ->
+    def result = http.request(mapMethod(method) , JSON) { req ->
       headers.Accept = "application/json"
       Utils.buildRequestHeaders(headers, headersToSet)
       body = inputData
 
       response.success = { resp, json ->
-        log.debug("POST RESPONSE CODE: ${resp.statusLine}")
-        log.debug("POST RESPONSE SUCCESS: ${json}")
+        log.debug("SEND RESPONSE CODE: ${resp.statusLine}")
+        log.debug("SEND RESPONSE SUCCESS: ${json}")
         Map jsonMap = json
         Response r = new Response()
         r.with {
@@ -338,7 +352,7 @@ class CallerService {
       }
 
       response.failure = { resp -> 
-        log.debug("POST RESPONSE FAILURE")
+        log.debug("SEND RESPONSE FAILURE")
         Response r = new Response()
         r.with {
           (success, errorCode, errorDescr, statusCode) = [
@@ -408,15 +422,14 @@ class CallerService {
     }
   }
 
-  private Response postOrPutXml(RequestMethod method, URL url, Map headersToSet, Map inputData) {
-    log.debug("XML inputData: ${inputData.toString()}")
+  private Response sendXml(RequestMethod method, URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
-    def result = http.request((method == RequestMethod.POST ? POST : PUT), XML) { req ->
+    def result = http.request(mapMethod(method), XML) { req ->
       Utils.buildRequestHeaders(headers, headersToSet)
       body = Utils.buildXmlString(inputData)
 
       response.success = { resp, xml ->
-        log.debug("POST RESPONSE CODE: ${resp.statusLine}")
+        log.debug("SEND RESPONSE CODE: ${resp.statusLine}")
 
         Response r = new Response()
         r.with {
@@ -440,10 +453,9 @@ class CallerService {
     }
   }
 
-  private Response postOrPutUrlEncoded(RequestMethod method, URL url, Map headersToSet, Map inputData) {
-    log.debug("URLENCODED inputData: ${inputData.toString()}")
+  private Response sendUrlEncoded(RequestMethod method, URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
-    def result = http.request(method == RequestMethod.POST ? POST : PUT) { req ->
+    def result = http.request(mapMethod(method)) { req ->
       Utils.buildRequestHeaders(headers, headersToSet)
       def queryMap = Utils.buildQueryAttributesMap(url, inputData)
       send URLENC, queryMap
