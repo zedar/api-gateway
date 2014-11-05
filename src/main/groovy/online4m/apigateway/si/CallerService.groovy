@@ -119,10 +119,14 @@ class CallerService {
    *  Supported combinations of attributes:
    *    SYNC  + GET   + JSON
    *    SYNC  + POST  + JSON
+   *    SYNC  + PUT   + JSON
    *    SYNC  + GET   + XML
    *    SYNC  + POST  + XML
+   *    SYNC  + PUT   + XML
    *    SYNC  + POST  + URLENC
-   *    ASYNC + POST  + JSON
+   *    SYNC  + PUT   + URLENC
+   *    SYNC  + DELETE
+   *    ASYNC (with all above methods)
    *  @param request - request with attributes required to call external API
    *  @param jedis - Redis connection, unique instance for the given invocation, taken out of JedisPool
    */
@@ -190,17 +194,20 @@ class CallerService {
     if (request.method == RequestMethod.GET && request.format == RequestFormat.JSON) {
       response = getJson(request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.POST && request.format == RequestFormat.JSON) {
-      response =  postJson(request.url, request.headers, request.data)
+    else if ([RequestMethod.POST, RequestMethod.PUT].find{ it == request.method } && request.format == RequestFormat.JSON) {
+      response = postOrPutJson(request.method, request.url, request.headers, request.data)
     }
     else if (request.method == RequestMethod.GET && request.format == RequestFormat.XML) {
       response = getXml(request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.POST && request.format == RequestFormat.XML) {
-      response = postXml(request.url, request.headers, request.data)
+    else if ([RequestMethod.POST, RequestMethod.PUT].find { it == request.method } && request.format == RequestFormat.XML) {
+      response = postOrPutXml(request.method, request.url, request.headers, request.data)
     }
-    else if (request.method == RequestMethod.POST && request.format == RequestFormat.URLENC) {
-      response = postUrlEncoded(request.url, request.headers, request.data)
+    else if ([RequestMethod.POST, RequestMethod.PUT].find{ it == request.method } && request.format == RequestFormat.URLENC) {
+      response = postOrPutUrlEncoded(request.method, request.url, request.headers, request.data)
+    }
+    else if (request.method == RequestMethod.DELETE) {
+      response = del(request.url, request.headers, request.data)
     }
     else {
       response = new Response()
@@ -250,7 +257,8 @@ class CallerService {
           }
         }
       }
-    })
+    }
+    )
 
     // Prepare confirmation (ack) response
     Response r = new Response()
@@ -279,7 +287,7 @@ class CallerService {
         Map jsonMap = json
         Response r = new Response()
         r.with {
-          (success, data) = [true, jsonMap]
+          (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
         }
         return r
       }
@@ -288,17 +296,14 @@ class CallerService {
         log.debug("FAILURE: STATUSCODE=${resp.statusLine.statusCode}, ${resp.statusLine.reasonPhrase}")
         Response r = new Response()
         r.with {
-          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+          (success, errorCode, errorDescr, statusCode) = [
+            false, 
+            "HTTP_ERR_${resp.statusLine.statusCode}", 
+            "${resp.statusLine.reasonPhrase}",
+            resp.statusLine.statusCode]
         }
         return r
       }
-    }
-
-    if (http) {
-      log.debug("HTTP C: ${http.getClass()}")
-      log.debug("HTTP C2: ${http.getClient()?.getClass()}, ${http.getClient()?.toString()}")
-      log.debug("HTTP C3: ${http.getClient().getConnectionManager().getClass()}" )
-      http.shutdown()
     }
 
     if (result) {
@@ -314,20 +319,20 @@ class CallerService {
     }
   }
 
-  private Response postJson(URL url, Map headersToSet, Map inputData) {
+  private Response postOrPutJson(RequestMethod method, URL url, Map headersToSet, Map inputData) {
     def http = new HTTPBuilder(url)
-    def result = http.request(POST, JSON) { req ->
+    def result = http.request((method == RequestMethod.POST ? POST : PUT) , JSON) { req ->
       headers.Accept = "application/json"
       Utils.buildRequestHeaders(headers, headersToSet)
       body = inputData
-      
+
       response.success = { resp, json ->
         log.debug("POST RESPONSE CODE: ${resp.statusLine}")
         log.debug("POST RESPONSE SUCCESS: ${json}")
         Map jsonMap = json
         Response r = new Response()
         r.with {
-          (success, data) = [true, jsonMap]
+          (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
         }
         return r
       }
@@ -336,7 +341,11 @@ class CallerService {
         log.debug("POST RESPONSE FAILURE")
         Response r = new Response()
         r.with {
-          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+          (success, errorCode, errorDescr, statusCode) = [
+            false, 
+            "HTTP_ERR_${resp.statusLine.statusCode}", 
+            "${resp.statusLine.reasonPhrase}",
+            resp.statusLine.statusCode]
         }
         return r
       }
@@ -367,7 +376,7 @@ class CallerService {
         log.debug("GET XML RESPONSE TYPE: ${xml.getClass()}")
         Response r = new Response()
         r.with {
-          (success, data) = [true, Utils.buildJsonEntity(xml)]
+          (success, data, statusCode) = [true, Utils.buildJsonEntity(xml), resp.statusLine.statusCode]
         }
         return r
       }
@@ -376,7 +385,11 @@ class CallerService {
         log.debug("FAILURE: STATUSCODE=${resp.statusLine.statusCode}, ${resp.statusLine.reasonPhrase}")
         Response r = new Response()
         r.with {
-          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+          (success, errorCode, errorDescr, statusCode) = [
+            false, 
+            "HTTP_ERR_${resp.statusLine.statusCode}", 
+            "${resp.statusLine.reasonPhrase}",
+            resp.statusLine.statusCode]
         }
         return r
       }
@@ -395,10 +408,10 @@ class CallerService {
     }
   }
 
-  private Response postXml(URL url, Map headersToSet, Map inputData) {
+  private Response postOrPutXml(RequestMethod method, URL url, Map headersToSet, Map inputData) {
     log.debug("XML inputData: ${inputData.toString()}")
     def http = new HTTPBuilder(url)
-    def result = http.request(POST, XML) { req ->
+    def result = http.request((method == RequestMethod.POST ? POST : PUT), XML) { req ->
       Utils.buildRequestHeaders(headers, headersToSet)
       body = Utils.buildXmlString(inputData)
 
@@ -407,7 +420,7 @@ class CallerService {
 
         Response r = new Response()
         r.with {
-          (success, data) = [true, Utils.buildJsonEntity(xml)]
+          (success, data, statusCode) = [true, Utils.buildJsonEntity(xml), resp.statusLine.statusCode]
         }
         return r
       }
@@ -416,17 +429,21 @@ class CallerService {
         log.debug("POST RESPONSE FAILURE")
         Response r = new Response()
         r.with {
-          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+          (success, errorCode, errorDescr, statusCode) = [
+            false, 
+            "HTTP_ERR_${resp.statusLine.statusCode}", 
+            "${resp.statusLine.reasonPhrase}",
+            resp.statusLine.statusCode]
         }
         return r
       }
     }
   }
 
-  private Response postUrlEncoded(URL url, Map headersToSet, Map inputData) {
+  private Response postOrPutUrlEncoded(RequestMethod method, URL url, Map headersToSet, Map inputData) {
     log.debug("URLENCODED inputData: ${inputData.toString()}")
     def http = new HTTPBuilder(url)
-    def result = http.request(POST) { req ->
+    def result = http.request(method == RequestMethod.POST ? POST : PUT) { req ->
       Utils.buildRequestHeaders(headers, headersToSet)
       def queryMap = Utils.buildQueryAttributesMap(url, inputData)
       send URLENC, queryMap
@@ -439,7 +456,7 @@ class CallerService {
           Map jsonMap = json
           Response r = new Response()
           r.with {
-            (success, data) = [true, jsonMap]
+            (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
           }
           return r
         }
@@ -447,7 +464,7 @@ class CallerService {
           def xml = new XmlSlurper().parseText(resp.entity.content.text)
           Response r = new Response()
           r.with {
-            (success, data) = [true, Utils.buildJsonEntity(xml)]
+            (success, data, statusCode) = [true, Utils.buildJsonEntity(xml), resp.statusLine.statusCode]
           }
           return r
         }
@@ -460,10 +477,62 @@ class CallerService {
         log.debug("POST RESPONSE FAILURE")
         Response r = new Response()
         r.with {
-          (success, errorCode, errorDescr) = [false, "HTTP_ERR_${resp.statusLine.statusCode}", "${resp.statusLine.reasonPhrase}"]
+          (success, errorCode, errorDescr, statusCode) = [
+            false, 
+            "HTTP_ERR_${resp.statusLine.statusCode}", 
+            "${resp.statusLine.reasonPhrase}",
+            resp.statusLine.statusCode]
         }
         return r
       }
+    }
+  }
+
+  private Response del(URL url, Map headersToSet, Map inputData) {
+    def http = new HTTPBuilder(url)
+    def result = http.request(DELETE) { req ->
+      Utils.buildRequestHeaders(headers, headersToSet)
+      def queryMap = Utils.buildQueryAttributesMap(url, inputData)
+
+      uri.query = queryMap
+
+
+      log.debug "HEADERS: ${headers}"
+      log.debug "QUERY: ${queryMap}"
+
+      response.success = { resp, json ->
+        log.debug("SUCCESS: STATUSCODE=${resp.statusLine.statusCode}")
+        Response r = new Response()
+        r.with {
+          (success, statusCode) = [true, resp.statusLine.statusCode]
+        }
+        return r
+      }
+
+      response.failure = { resp ->
+        log.debug("FAILURE: STATUSCODE=${resp.statusLine.statusCode}, ${resp.statusLine.reasonPhrase}")
+        Response r = new Response()
+        r.with {
+          (success, errorCode, errorDescr, statusCode) = [
+            false, 
+            "HTTP_ERR_${resp.statusLine.statusCode}", 
+            "${resp.statusLine.reasonPhrase}",
+            resp.statusLine.statusCode]
+        }
+        return r
+      }
+    }
+
+    if (result) {
+      log.debug("RESPONSE: ${result}")
+      return result
+    }
+    else {
+      Response r = new Response()
+      r.with {
+        (success, errorCode, errorDescr) = [true, "SI_ERR_REST_CALL_UNDEFINED", "Response from REST call is undefined"]
+      }
+      return r
     }
   }
 }

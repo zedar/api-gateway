@@ -1,10 +1,11 @@
 {
     "data": {
+        "id": "1001",
         "req_attr1": "alpha",
         "req_attr2": "beta"
     },
     "format": "JSON",
-    "method": "GET",
+    "method": "DELETE",
     "mode": "SYNC",
-    "url": "http://localhost:4545/get_sync_json"
+    "url": "http://localhost:4545/delete_cust"
 }

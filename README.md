@@ -1,7 +1,7 @@
 API Gateway - unified access to REST or Web Services
 -----------------------------
 
-API Gateway is intent to play a role of single entry point for invocation of diverse services, either REST or WebServices.
+API Gateway intents to play a role of single entry point for invocation of diverse services, either REST or WebServices.
 Unifies a way of calling APIs. 
 Primary goals are: 
 
@@ -199,7 +199,7 @@ where **request** attributes are:
         "errorCode":      "0 if no error, else otherwise",
         "errorDescr":     "Error description",
         "data":           JSON WITH EXTERNAL API OUTPUT,
-        "httpStatusCode": "HTTP status code from external API invoke",
+        "statusCode":     "HTTP status code from external API invoke",
         "id":             "Universal Unique Identifier (UUID)",
         "href":           "http://localhost:5050/api/invoke/{id}/response",
         "links": {
@@ -262,7 +262,7 @@ Response when only acknowlegment is available.
         "success":        "true|false",
         "errorCode":      "0 if no error, else otherwise",
         "errorDescr":     "Error description",
-        "httpStatusCode": "HTTP status code from external API invoke",
+        "statusCode":     "HTTP status code from external API invoke",
         "id":             "Universal Unique Identifier (UUID)",
         "href":           "http://localhost:5050/api/invoke/{id}/response",
         "links": {
@@ -282,7 +282,7 @@ It contains *data* attribute with JSON representation of external API output.
         "errorCode":      "0 if no error, else otherwise",
         "errorDescr":     "Error description",
         "data":           JSON WITH EXTERNAL API OUTPUT,
-        "httpStatusCode": "HTTP status code from external API invoke",
+        "statusCode":     "HTTP status code from external API invoke",
         "id":             "Universal Unique Identifier (UUID)",
         "href":           "http://localhost:5050/api/invoke/{id}/response",
         "links": {
@@ -380,6 +380,21 @@ After that mountebank server should be available with command:
 
     $ mb
 
+#### Required FIXes
+
+1. [node.js](http://nodejs.org) version greater than v.0.11.8
+
+v0.11.8 has a bug: request.method is null for HTTP DELETE calls [issue](https://github.com/joyent/node/issues/6461).
+
+2. Fix Internal Server Error (500) if predicate attributes have null value.
+
+[Pull request #53](https://github.com/bbyars/mountebank/pull/53) that solves this issue.
+
+3. For load testing fix logging mechanism
+
+[Required commit](https://github.com/bbyars/mountebank/commit/2f1915702ab9674d08ec8d46a7e6886c8c8b426f) or latest (non production version).
+
+ 
 ### Redis - for requests persistance and statistics
 
 API Gateway uses [Redis](http://redis.io) key/value store for persisting requests and their responses and collecting statistics.

@@ -84,20 +84,21 @@ installApp {
   ]
 }
 
-task startMounteBank(type: ExecWait) {
-  command "mb --loglevel error"
-  ready ""
-  directory "."
-}
-
-// Uncomment next task definition only when you base on mountebank with following fix applied:
-// https://github.com/bbyars/mountebank/commit/a57155620070ec14bd51178995a1ee678a81b905
 /* task startMounteBank(type: ExecWait) { */
-/*   command "../mountebank/bin/mb" */
-/*   ready "point your browser to http://localhost:2525" */
+/*   command "mb --loglevel debug" */
 /*   ready "" */
 /*   directory "." */
 /* } */
+
+// Uncomment next task definition only when you base on mountebank with following fixes applied:
+// https://github.com/bbyars/mountebank/commit/a57155620070ec14bd51178995a1ee678a81b905
+// https://github.com/bbyars/mountebank/commit/a4b13a1ef9fbc9b591002a17e2c47fb2e67cea1f
+task startMounteBank(type: ExecWait) {
+  command "../mountebank/bin/mb"
+  ready "point your browser to http://localhost:2525"
+  ready ""
+  directory "."
+}
 
 
 task initStubs(dependsOn: "startMounteBank", type: ExecWait) {

@@ -71,7 +71,7 @@ class PostAsyncApiTest extends Specification {
     with(r) {
       success == true
       errorCode == "0"
-      statusCode == 200
+      statusCode == 201
       id == rr.id
       data != null
       data.id == "101"

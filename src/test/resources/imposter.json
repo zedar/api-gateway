@@ -225,6 +225,43 @@
           }
         ]
       }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "200",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"id\": \"1001\"}"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "PUT",
+          "path": "/put_json_cust"
+        }
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
+          "statusCode": "200",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"id\": \"1001\"}"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "DELETE",
+          "path": "/delete_cust",
+          "query": {
+            "id": "1001"
+          }
+        }
+      }]
     }
   ]
 }
