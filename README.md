@@ -470,7 +470,7 @@ To get log of last 20 requests:
 or
     $ curl -X GET -H "Accept: application/json" http://localhost:5050/api
 
-## Example: [Salesforce.com Account API](docs/Salesforce_API)
+## Example: [Salesforce.com Account API](docs/Salesforce_API.md)
 
 
 
