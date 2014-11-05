@@ -33,7 +33,7 @@ Response with external API output is a body of this endpoint result.
 Request attributes:
 
   * mode=SYNC
-  * method=GET|POST|PUT|DELETE
+  * method=GET|POST|PUT|PATCH|DELETE
   * format=JSON|XML|URLENC
 
 
@@ -48,7 +48,7 @@ External API is called in separate thread and its output could be retrieved by *
 Request attributes:
 
   * mode=ASYNC
-  * method=GET|POST|PUT|DELETE
+  * method=GET|POST|PUT|PATH|DELETE
   * format=JSON|XML|URLENC
 
 ## Get Request that initialized invocation of external API 
@@ -74,7 +74,7 @@ API specification tends to be inline with [json:api](http://jsonapi.org/format/)
 
     Accept: application/json | application/vnd.api+json
 
-**POST**
+**POST|PUT|PATCH**
 
     Content-Type: application/json | application/vnd.api+json
     Accept: application/json | application/vnd.api+json
@@ -143,7 +143,7 @@ Use diverse HTTP methods and formats for API invocations.
     {
       "request": {
         "id":       "Universal Unique Identifier (UUID)",
-        "method":   "GET|POST|PUT|DELETE",
+        "method":   "GET|POST|PUT|PATCH|DELETE",
         "mode":     "SYNC|ASYNC|EVENT",
         "format":   "JSON|XML|URLENC",
         "url":      "URI OF EXTERNAL ENDPOINT",
@@ -225,7 +225,7 @@ Get request that started invocation given by {id}.
     {
       "request": {
         "id":       "Universal Unique Identifier (UUID)",
-        "method":   "GET|POST|PUT|DELETE",
+        "method":   "GET|POST|PUT|PATCH|DELETE",
         "mode":     "SYNC|ASYNC|EVENT",
         "format":   "JSON|XML|URLENC",
         "url":      "URI OF EXTERNAL ENDPOINT",
@@ -308,55 +308,6 @@ Run health check defined by the given :name.
 Defined health checks:
 
   * *apigateway*
-
-## Example API calls
-
-### Get API endpoints
-
-    $ curl -X GET -H "Accept: application/vnd.api+json" http://localhost:5050/api
-or
-    $ curl -X GET -H "Accept: application/json" http://localhost:5050/api
-
-### Example: HipChat - get history of chats
-
-Example HipChat API call:
-
-    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=YOUR_TOKEN", "data": {"max-results": {"l": 10}}}' -i http://localhost:5050/api/call
-
-### Example: Twitter query with OAUTH authorization
-
-Before any API call you have to register your application in twitter. By doing this you get unique client id and client secret.
-These attributes are needed to ask for access token. Access token is used in all subsequent api calls.
-
-Point your browser to [apps.twitter.com](https://apps.twitter.com), click the button *Create New App* and  register your application.
-
-Next, request for a access token.
-
-    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "POST", "mode": "SYNC", "format": "URLENC", "url": "https://api.twitter.com/oauth2/token", "data": {"grant_type": "client_credentials", "client_id", "YOUR_APP_ID", "client_secret", "YOUR_APP_SECRET"}}' -i http://localhost:5050/api/call
-
-As result you should get:
-  
-    {
-      "errorCode":"0",
-      "data": {
-        "access_token":"ACCESS_TOKEN_URLENCODED",
-        "token_type":"bearer"
-      },
-      "success":true
-    }
-
-Now you are ready to call, for example, twitter's search API. But now to request add headers map:
-
-    "headers": {
-      "Authorization": "Bearer ACCESS_TOKEN_URLENCODED"
-    }
-
-and invocation:
-
-    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.twitter.com/1.1/search/tweets.json", "headers": {"Authorization": " Bearer ACCESS_TOKEN_URLENCODED"}, "data": {"q": "ratpackweb"}' -i http://localhost:5050/api/call
-
-
-
 
 # Run Tests
 
@@ -511,18 +462,55 @@ To get log of last 20 requests:
 
     $ redis-cli> zrange request-log 0 20
 
-# Async processing
+# Example API calls
 
-Async processing starts when mode=ASYNC.
-As immediate result APIGateway returns success code, if async processing started successfully and URL to ask for ultimate result.
+## Get API endpoints
 
-Internally:
-  * CallerService.invoke() method calls
-    * private method that returns Observable (RxJava) with one result.
-    * then
-    * subscribes to observable in order to process response when external API finishes
-    * then
-    * returns simple Response with success and URL to ask for final response
+    $ curl -X GET -H "Accept: application/vnd.api+json" http://localhost:5050/api
+or
+    $ curl -X GET -H "Accept: application/json" http://localhost:5050/api
+
+## Example: [Salesforce.com Account API](docs/Salesforce_API)
+
+
+
+## Example: HipChat - get history of chats
+
+Example HipChat API call:
+
+    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.hipchat.com/v2/room/online4m.com/history/latest?auth_token=YOUR_TOKEN", "data": {"max-results": {"l": 10}}}' -i http://localhost:5050/api/call
+
+## Example: Twitter query with OAUTH authorization
+
+Before any API call you have to register your application in twitter. By doing this you get unique client id and client secret.
+These attributes are needed to ask for access token. Access token is used in all subsequent api calls.
+
+Point your browser to [apps.twitter.com](https://apps.twitter.com), click the button *Create New App* and  register your application.
+
+Next, request for a access token.
+
+    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "POST", "mode": "SYNC", "format": "URLENC", "url": "https://api.twitter.com/oauth2/token", "data": {"grant_type": "client_credentials", "client_id", "YOUR_APP_ID", "client_secret", "YOUR_APP_SECRET"}}' -i http://localhost:5050/api/call
+
+As result you should get:
+  
+    {
+      "errorCode":"0",
+      "data": {
+        "access_token":"ACCESS_TOKEN_URLENCODED",
+        "token_type":"bearer"
+      },
+      "success":true
+    }
+
+Now you are ready to call, for example, twitter's search API. But now to request add headers map:
+
+    "headers": {
+      "Authorization": "Bearer ACCESS_TOKEN_URLENCODED"
+    }
+
+and invocation:
+
+    $ curl -X POST -H "Content-Type: application/json" -d '{"method": "GET", "mode": "SYNC", "format": "JSON", "url": "https://api.twitter.com/1.1/search/tweets.json", "headers": {"Authorization": " Bearer ACCESS_TOKEN_URLENCODED"}, "data": {"q": "ratpackweb"}' -i http://localhost:5050/api/call
 
 # Commands to be used while developing
 

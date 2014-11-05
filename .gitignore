@@ -5,3 +5,4 @@ build
 out.json
 src/test/resources/hipchat.properties
 dump.rdb
+src/test/resources/sf_get_token.json

@@ -125,14 +125,21 @@ task stopEnv(type: FreePorts) {
 initStubs.mustRunAfter stopEnv
 startRedis.mustRunAfter stopEnv
 
-task cleanEnv(dependsOn: "stopEnv") {
+task cleanDEnv(dependsOn: "stopEnv") {
   description "Stop servers used for testing and development"
 }
 
-task runEnv(dependsOn: [stopEnv, initStubs, startRedis]) << {
+task runDEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
   description "Start servers required for development: MounteBank (external API stubs), Redis key/value store"
 }
 
+task cleanREnv(dependsOn: "stopEnv") {
+  description "Stop servers used for runtime"
+}
+
+task runREnv(dependsOn: [stopEnv, startRedis]) {
+  description "Start servers required for runtime: Redis key/value store"
+}
 
 task runTestEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
   description "Start servers required for testing: MounteBank and Redis"
@@ -141,7 +148,7 @@ task runTestEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
 // Important: before running any test initialize environment, so run server with stubs and redis key/value store
 // When tests are finished clean environment. Shutdown stubs server and redis key/value store.
 test.dependsOn runTestEnv
-test.finalizedBy cleanEnv
+test.finalizedBy cleanDEnv
 
 // Run tests in parallel.
 def forks = Math.max(2, (int)(Runtime.runtime.availableProcessors() / 2))
