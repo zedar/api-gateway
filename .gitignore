@@ -9,3 +9,4 @@ src/test/resources/sf_get_token.json
 src/test/resources/sf_native_new_account.json
 src/test/resources/sf_new_account.json
 src/test/resources/sf_requests.txt
+src/test/resources/sf_update_account.json

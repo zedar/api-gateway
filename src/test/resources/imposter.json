@@ -246,6 +246,19 @@
     {
       "responses": [{
         "is": {
+          "statusCode": "204"
+        }
+      }],
+      "predicates": [{
+        "equals": {
+          "method": "PATCH",
+          "path": "/patch_json_cust_no_content"
+        }
+      }]
+    },
+    {
+      "responses": [{
+        "is": {
           "statusCode": "200",
           "headers": {
             "Content-Type": "application/json"

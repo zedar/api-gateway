@@ -342,13 +342,21 @@ class CallerService {
 
       response.success = { resp ->
         log.debug("GOT RESPONSE-CODE: ${resp.statusLine}")
-        String text = resp.entity.content.text
+        // If there is no content returned, so HTTP 204
+        if (resp.statusLine.statusCode == 204) {
+          Response r = new Response()
+          r.with {
+            (success, statusCode) = [true, resp.statusLine.statusCode]
+          }
+          return r
+        }
+        String text = resp.entity?.content?.text
         log.debug("GOT RESPONSE-SUCCESS: ${text}")
         resp.headers?.each {
           log.debug("GOT RESPONSE-HEADER: ${it.name} : ${it.value}")
         }
         String contentType = resp.headers."Content-Type"
-        if (contentType?.startsWith("application/json")) {
+        if (contentType?.startsWith("application/json") && text) {
           def json = new JsonSlurper().parseText(text)
           log.debug("GOT RESPONSE-PARSED: ${JsonOutput.prettyPrint(JsonOutput.toJson(json))}")
           Map jsonMap = json
@@ -466,6 +474,15 @@ class CallerService {
       response.success = { resp, xml ->
         log.debug("SEND RESPONSE CODE: ${resp.statusLine}")
 
+        // If there is no content returned, so HTTP 204
+        if (resp.statusLine.statusCode == 204) {
+          Response r = new Response()
+          r.with {
+            (success, statusCode) = [true, resp.statusLine.statusCode]
+          }
+          return r
+        }
+
         Response r = new Response()
         r.with {
           (success, data, statusCode) = [true, Utils.buildJsonEntity(xml), resp.statusLine.statusCode]
@@ -496,6 +513,15 @@ class CallerService {
       send URLENC, queryMap
 
       response.success = { resp ->
+        // If there is no content returned, so HTTP 204
+        if (resp.statusLine.statusCode == 204) {
+          Response r = new Response()
+          r.with {
+            (success, statusCode) = [true, resp.statusLine.statusCode]
+          }
+          return r
+        }
+
         String contentType = resp.headers."Content-Type"
         log.debug("CONTENT-TYPE: ${contentType}")
         if (contentType?.startsWith("application/json")) {
