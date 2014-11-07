@@ -27,8 +27,9 @@ As result there are 2 very important values that you can find in application set
 
 We are going to use them in API to get *access token*.
 
-There is one more attribute called **Security Token** that has to connected with consumer password.
-If you do not know it, from top menu select *your name* and then **My profile**. From left side menu sslect **Reset My security Token**.
+There is one more attribute called **Security Token** that has to be connected with consumer password.
+If you do not know it, from top menu select *your name* and then **My settings**. 
+From left side menu sslect **Personal/Reset My security Token**.
 Click the button **Reset Security Token**. New token is delivered via email.
 
 Detailed instructions could be found in [Force.com REST API Developer's Guide](https://www.salesforce.com/us/developer/docs/api_rest/).
@@ -75,5 +76,7 @@ As response in **data** attribute you should get *access_token* and the other im
       "signature": "wsDDfB6/HffugIfWjPQIs2X6sPHWj3e1QPKPX7VGats=",
       "token_type": "Bearer"
     }
+
+## Create new ACCOUNT
 
 

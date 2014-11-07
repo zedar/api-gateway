@@ -6,3 +6,6 @@ out.json
 src/test/resources/hipchat.properties
 dump.rdb
 src/test/resources/sf_get_token.json
+src/test/resources/sf_native_new_account.json
+src/test/resources/sf_new_account.json
+src/test/resources/sf_requests.txt

@@ -340,16 +340,51 @@ class CallerService {
       Utils.buildRequestHeaders(headers, headersToSet)
       body = inputData
 
-      response.success = { resp, json ->
-        log.debug("SEND RESPONSE CODE: ${resp.statusLine}")
-        log.debug("SEND RESPONSE SUCCESS: ${json}")
-        Map jsonMap = json
-        Response r = new Response()
-        r.with {
-          (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
+      response.success = { resp ->
+        log.debug("GOT RESPONSE-CODE: ${resp.statusLine}")
+        String text = resp.entity.content.text
+        log.debug("GOT RESPONSE-SUCCESS: ${text}")
+        resp.headers?.each {
+          log.debug("GOT RESPONSE-HEADER: ${it.name} : ${it.value}")
         }
-        return r
+        String contentType = resp.headers."Content-Type"
+        if (contentType?.startsWith("application/json")) {
+          def json = new JsonSlurper().parseText(text)
+          log.debug("GOT RESPONSE-PARSED: ${JsonOutput.prettyPrint(JsonOutput.toJson(json))}")
+          Map jsonMap = json
+          Response r = new Response()
+          r.with {
+            (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
+          }
+          return r
+        }
+        else {
+          Response r = new Response()
+          r.with {
+            (success, errorCode, errorDescr, statusCode) = [
+              false,
+              "HTTP_ERR_${resp.statusLine.statusCode}",
+              "${resp.statusLine.reasonPhrase}",
+              resp.statusLine.statusCode
+            ]
+          }
+          return r
+        }
       }
+      
+      // IMPORTANT: there is a bug in #groovylang https://jira.codehaus.org/browse/GROOVY-7132
+      //  Fixed in version 2.3.8 and above. 
+      //  TODO: use it if 2.3.8 is available
+      /* response.success = { resp, json -> */
+      /*   log.debug("SEND RESPONSE CODE: ${resp.statusLine}") */
+      /*   log.debug("SEND RESPONSE SUCCESS: ${json}") */
+      /*   Map jsonMap = json */
+      /*   Response r = new Response() */
+      /*   r.with { */
+      /*     (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode] */
+      /*   } */
+      /*   return r */
+      /* } */
 
       response.failure = { resp -> 
         log.debug("SEND RESPONSE FAILURE")
