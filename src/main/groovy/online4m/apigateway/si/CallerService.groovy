@@ -292,17 +292,53 @@ class CallerService {
       log.debug "HEADERS: ${headers}"
       log.debug "QUERY: ${queryMap}"
 
-      response.success = { resp, json ->
-        log.debug("SUCCESS: STATUSCODE=${resp.statusLine.statusCode}")
-        log.debug("RESP JSON class: ${json.getClass()}")
-        // convert JsonObject to Map interface
-        Map jsonMap = json
-        Response r = new Response()
-        r.with {
-          (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
+      response.success = { resp ->
+        if (resp.statusLine.statusCode == 204) {
+          Response r = new Response()
+          r.with {
+            (success, statusCode) = [true, resp.statusLine.statusCode]
+          }
+          return r
         }
-        return r
+        String text = resp.entity?.content?.text
+        String contentType = resp.headers."Content-Type"
+        if (contentType?.startsWith("application/json") && text) {
+          def json = new JsonSlurper().parseText(text)
+          Map jsonMap = json
+          Response r = new Response()
+          r.with {
+            (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode]
+          }
+          return r
+        }
+        else {
+          Response r = new Response()
+          r.with {
+            (success, errorCode, errorDescr, statusCode) = [
+              false,
+              "SI_ERR_UNSUPPORTED_RESPONSE_CONTENT",
+              "Content-Type : ${contentType}",
+              resp.statusLine.statusCode
+            ]
+          }
+          return r
+        }
       }
+      
+      // IMPORTANT: there is a bug in #groovylang https://jira.codehaus.org/browse/GROOVY-7132
+      //  Fixed in version 2.3.8 and above. 
+      //  TODO: use it if 2.3.8 is available
+      /* response.success = { resp, json -> */
+      /*   log.debug("SUCCESS: STATUSCODE=${resp.statusLine.statusCode}") */
+      /*   log.debug("RESP JSON class: ${json.getClass()}") */
+      /*   // convert JsonObject to Map interface */
+      /*   Map jsonMap = json */
+      /*   Response r = new Response() */
+      /*   r.with { */
+      /*     (success, data, statusCode) = [true, jsonMap, resp.statusLine.statusCode] */
+      /*   } */
+      /*   return r */
+      /* } */
 
       response.failure = { resp ->
         log.debug("FAILURE: STATUSCODE=${resp.statusLine.statusCode}, ${resp.statusLine.reasonPhrase}")
@@ -371,8 +407,8 @@ class CallerService {
           r.with {
             (success, errorCode, errorDescr, statusCode) = [
               false,
-              "HTTP_ERR_${resp.statusLine.statusCode}",
-              "${resp.statusLine.reasonPhrase}",
+              "SI_ERR_UNSUPPORTED_RESPONSE_CONTENT",
+              "Content-Type : ${contentType}",
               resp.statusLine.statusCode
             ]
           }

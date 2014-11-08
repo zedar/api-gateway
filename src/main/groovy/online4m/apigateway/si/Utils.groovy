@@ -76,7 +76,7 @@ class Utils {
    */
   static HashMap buildRequestHeaders(Map requestHeaders, Map headersToSet) {
     log.debug("BUILD REQ HEADERS: ${requestHeaders}, ${headersToSet}")
-    if (!requestHeaders || !headersToSet) {
+    if (requestHeaders == null || headersToSet == null) {
       return requestHeaders
     }
     headersToSet?.each{ key, val ->
