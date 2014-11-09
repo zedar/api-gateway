@@ -5,7 +5,7 @@
 Whole test for [Force.com](http://force.com) API is defined in 
 [ForceDotComApiTest](https://github.com/zedar/api-gateway/tree/master/src/test/groovy/online4m/apigateway/func/ForceDotComApiTest.groovy).
 
-Before running it please look at the [Prerequisites](#Prerequisites) section.
+Before running it please look at the [Prerequisites](#prerequisites) section.
 Especially you need developer account in Force.com.
 
 Test case requires properties file. In folder *./src/test/resources* create file *force.com.properties* file with attributes:
