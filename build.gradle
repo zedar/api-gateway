@@ -141,14 +141,21 @@ task runREnv(dependsOn: [stopEnv, startRedis]) {
   description "Start servers required for runtime: Redis key/value store"
 }
 
-task runTestEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
+task runDevEnv(dependsOn: [stopEnv, initStubs, startRedis]) {
   description "Start servers required for testing: MounteBank and Redis"
+}
+
+task runRuntimeEnv(dependsOn: [stopEnv, startRedis]) {
+  description "Start servers required for runtime: Redis key/value store"
 }
 
 // Important: before running any test initialize environment, so run server with stubs and redis key/value store
 // When tests are finished clean environment. Shutdown stubs server and redis key/value store.
-test.dependsOn runTestEnv
+test.dependsOn runDevEnv
 test.finalizedBy cleanDEnv
+
+// Important: before run command start servers required for runtime: Redis
+run.dependsOn runRuntimeEnv
 
 // Run tests in parallel.
 def forks = Math.max(2, (int)(Runtime.runtime.availableProcessors() / 2))
