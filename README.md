@@ -36,6 +36,7 @@ Table of Contents
   * [API specification](#api-specification)
     * [HTTP headers](#http-headers)
     * [Endpoints](#endpoints)
+      * [/api-docs](#api-docs)
       * [/api](#api)
       * [/api/invoke](#apiinvoke)
       * [/api/invoke/{id}/request](#apiinvokeidrequest)
@@ -106,65 +107,40 @@ Enrich response with links to itself and to its request.
 
 # API specification
 
-API specification tends to be inline with [json:api](http://jsonapi.org/format/) standard.
+API specification is inline with [Swagger 2.0 JSON API specification](https://github.com/swagger-api/swagger-spec).
 
 ## HTTP headers
 
 **GET**
 
-    Accept: application/json | application/vnd.api+json
+    Accept: application/json
 
 **POST|PUT|PATCH**
 
-    Content-Type: application/json | application/vnd.api+json
-    Accept: application/json | application/vnd.api+json
+    Content-Type: application/json
+    Accept: application/json
 
 ## Endpoints
 
-### /api
+### /api-docs
 
-Get list of all available APIs
+Get list of available APIs in Swagger 2.0 format.
 
 **Method:** GET  
-**Accept:** application/json or application/vnd.api+json  
+**Accept:** application/json  
 **HTTP return codes:**
 
   * 200 - OK
 
+### /api
 
-#### Output message format
+Redirects to ```/api-docs```.
 
-    {
-      "title": "Get list of all available APIs",
-      "href": "http://localhost:5050/api",
-      "links": {
-          "invoke": {
-            "href": "http://localhost:5050/api/invoke",
-            "type": "api",
-            "title": "POST request and invoke external API"
-          },
-          "request": {
-            "href":   "http://localhost:5050/api/invoke/{id}/request",
-            "type":   "api",
-            "title":  "GET request, identified by {id}, that initialized external API call"
-          },
-          "response": {
-            "href": "http://localhost:5050/api/invoke/{id}/response",
-            "type": "api",
-            "title": "GET response, identified by {id}, that is result of external API call"
-          },
-          "health-checks": {
-            "href": "http://localhost:5050/api/health-checks",
-            "type": "monitoring",
-            "title": "Run all health checks"
-          },
-          "health-check-named": {
-            "href": "http://localhost:5050/api/call/health-check/{name}",
-            "type": "monitoring",
-            "title": "Available: apigateway"
-          }
-      }
-    }
+**Method:** GET  
+**Accept:** application/json
+**HTTP return codes:**
+
+  * 200 - OK
 
 ### /api/invoke
 
@@ -172,8 +148,8 @@ Invoke external API either synchronously or asynchronously.
 Use diverse HTTP methods and formats for API invocations.
 
 **Method:** POST  
-**Content-Type:** application/json or application/vnd.api+json  
-**Accept:** application/json or application/vnd.api+json  
+**Content-Type:** application/json
+**Accept:** application/json
 **HTTP return codes:**
 
   * 200 - OK
@@ -255,7 +231,7 @@ where **request** attributes are:
 Get request that started invocation given by {id}.
 
 **Method:** GET  
-**Accept:** application/json or application/vnd.api+json  
+**Accept:** application/json
 **HTTP return codes:**
 
   * 200 - OK
@@ -288,7 +264,7 @@ If *mode*=ASYNC, response could be acknowledgment message (when async call has n
 response from external API call (if async processing has finished).
 
 **Method:** GET  
-**Accept:** application/json or application/vnd.api+json  
+**Accept:** application/json
 **HTTP return codes:**
 
   * 200 - OK
