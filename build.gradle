@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath "io.ratpack:ratpack-gradle:0.9.8"
+    classpath "io.ratpack:ratpack-gradle:0.9.12"
     classpath 'com.bluepapa32:gradle-watch-plugin:0.1.3'
     classpath 'jp.tomorrowkey.gradle.notifier:notifier-plugin:+'
   }
@@ -19,6 +19,7 @@ apply plugin: "watch"
 apply plugin: "notifier-plugin"
 
 repositories {
+  maven { url 'http://clinker.netty.io/nexus/content/repositories/snapshots' }
   maven { url "http://oss.jfrog.org/artifactory/repo" }
   jcenter()
   maven { url "http://repo.springsource.org/repo" } // for springloaded
@@ -27,7 +28,7 @@ repositories {
 dependencies {
   // SpringLoaded enables runtime hot reloading.
   // It is not part of the app runtime and is not shipped in the distribution.
-  springloaded "org.springframework:springloaded:1.2.0.RELEASE"
+  //springloaded "org.springframework:springloaded:1.2.0.RELEASE"
 
   // Add monitoring 
   compile ratpack.dependency("codahale-metrics")

@@ -32,6 +32,7 @@ import online4m.apigateway.si.Response
 import online4m.apigateway.si.Utils
 import online4m.apigateway.ds.CallerDSModule
 import online4m.apigateway.si.CallerServiceCtx
+import online4m.apigateway.docs.ApiDocsHandler
 
 
 final Logger log = LoggerFactory.getLogger(Ratpack.class)
@@ -53,71 +54,24 @@ ratpack {
       render groovyTemplate("index.html", title: "My Ratpack App")
     }
 
-    prefix("api") {
-      handler { CallerServiceCtx csCtx, PublicAddress publicAddress ->
-        // common functionality for all the other REST methods
-        if (csCtx && !csCtx.serverUrl) {
-          csCtx.serverUrl = publicAddress.getAddress(context).toString()
-          log.debug("COMMON HANDLER: ${csCtx?.toString()}")
-        }
-
-        // log HTTP header names and their values
-        /* request.headers?.names?.each {name -> */
-        /*   log.debug("HEADER ${name}, VALUES: ${request.headers?.getAll(name)}") */
-        /* } */
-        // call next() to process request
-        next()
+    handler { CallerServiceCtx csCtx, PublicAddress publicAddress ->
+      // common functionality for all the other REST methods
+      if (csCtx && !csCtx.serverUrl) {
+        csCtx.serverUri = publicAddress.getAddress(context)
       }
 
+      // call next() to process request
+      next()
+    }
+
+    prefix("api-docs") {
+      handler registry.get(ApiDocsHandler)
+    }
+
+    prefix("api") {
       // get list of available APIs - follow HAL hypertext application language conventions
       get { CallerServiceCtx csCtx ->
-        String serverUrl = csCtx.serverUrl
-        // IMPORTANT: element of structure cannot be keyword like "call" because then Groovy tries to call it.
-        def links = [
-          title:  "Get list of all available APIs",
-          href:   serverUrl + "/api",
-          links: [
-            "invoke": [
-              href:   serverUrl + "/api/invoke",
-              type:   "api",
-              title:  "POST request and invoke external API"
-            ],
-            "request": [
-              href:   serverUrl + "/api/invoke/{id}/request",
-              type:   "api",
-              title:  "GET request, identified by {id}, that initialized external API call"
-            ],
-            "response": [
-              href:   serverUrl + "/api/invoke/{id}/response",
-              type:   "api",
-              title:  "GET response, identified by {id}, that is result of external API call"
-            ],
-            "health-checks": [
-              href: serverUrl + "/api/health-checks",
-              title: "Run all health checks"
-            ],
-            "health-check-named": [
-              href: serverUrl + "/api/call/health-check/:name",
-              templated: true,
-              title: "Available: apigateway"
-            ]
-          ]
-        ]
-
-        byContent {
-          json {
-            render JsonOutput.prettyPrint(JsonOutput.toJson(links))
-          }
-          type("application/vnd.api+json") {
-            render JsonOutput.prettyPrint(JsonOutput.toJson(links))
-          }
-          xml {
-            def api = [
-              api: links
-            ]
-            render Utils.buildXmlString(api)
-          }
-        }
+        redirect "api-docs"
       }
 
       // call reactive way - RxJava

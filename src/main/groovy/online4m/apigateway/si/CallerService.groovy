@@ -234,7 +234,8 @@ class CallerService {
     }
 
     // Fork further execution
-    execControl.fork(new Action<Execution>() {
+    //execControl.fork(new Action<Execution>() {
+    execControl.exec().start(new Action<Execution>() {
       public void execute(Execution execution) throws Exception {
         ExecControl ec = execution.getControl()
         ec.blocking {

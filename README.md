@@ -17,9 +17,49 @@ Primary goals are:
 
 API Gateway is [*ratpack*](http://www.ratpack.io) based project. 
 All classes are written in [*Groovy*](http://groovy.codehaus.org).
-It uses [*Gradle*](http://www.gradle.org) build subsystem and tends to follow [json:api](http://jsonapi.org/format/) standard.
+It uses [*Gradle*](http://www.gradle.org) build subsystem.
+
+API Gateway tends to follow [Swagger 2.0 JSON API specification](https://github.com/swagger-api/swagger-spec).
+
+    http://localhost:5050/api-docs
 
 API Gateway microservice is used by [online4m.com](https://www.online4m.com/online4m/info/howItWorks#howitworks) - pragmatic way to evolutionary develop workflow driven applications.
+
+Table of Contents
+=================
+
+  * [API Gateway usage patterns](#api-gateway-usage-patterns)
+    * [Invoke external REST API synchronously](#invoke-external-rest-api-synchronously)
+    * [Invoke external REST API asynchronously](#invoke-external-rest-api-asynchronously)
+    * [Get Request that initialized invocation of external API](#get-request-that-initialized-invocation-of-external-api)
+    * [Get ack or final response of external API invocation](#get-ack-or-final-response-of-external-api-invocation)
+  * [API specification](#api-specification)
+    * [HTTP headers](#http-headers)
+    * [Endpoints](#endpoints)
+      * [/api](#api)
+      * [/api/invoke](#apiinvoke)
+      * [/api/invoke/{id}/request](#apiinvokeidrequest)
+      * [/api/invoke/{id}/response](#apiinvokeidresponse)
+      * [api/health-checks](#apihealth-checks)
+      * [api/health-check/:name](#apihealth-checkname)
+  * [Run Tests](#run-tests)
+    * [Prerequisites](#prerequisites)
+      * [Mountebank - for stubbing and mocking](#mountebank---for-stubbing-and-mocking)
+      * [Redis - for requests persistance and statistics](#redis---for-requests-persistance-and-statistics)
+      * [Running dependencies](#running-dependencies)
+    * [Tests](#tests)
+  * [Key/value data storage](#keyvalue-data-storage)
+    * [Statistics](#statistics)
+      * [Usage](#usage)
+      * [Requests store](#requests-store)
+      * [Requests log](#requests-log)
+  * [Example API calls](#example-api-calls)
+    * [Get API endpoints](#get-api-endpoints)
+ * [](#example-salesforcecom-account-api)
+    * [Example: HipChat - get history of chats](#example-hipchat---get-history-of-chats)
+    * [Example: Twitter query with OAUTH authorization](#example-twitter-query-with-oauth-authorization)
+  * [Commands to be used while developing](#commands-to-be-used-while-developing)
+  * [TODO:](#todo)
 
 # API Gateway usage patterns
 

@@ -13,3 +13,4 @@ src/test/resources/sf_update_account.json
 src/test/resources/force.com.properties
 src/test/resources/sf_delete_account.json
 src/test/resources/sf_get_account.json
+.DS_Store

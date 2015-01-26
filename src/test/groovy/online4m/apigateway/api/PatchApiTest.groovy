@@ -33,10 +33,10 @@ class PatchApiTest extends Specification {
     def json = new JsonSlurper()
 
     when:
-    requestSpec { RequestSpec requestSpec ->
-      requestSpec.body.type("application/json")
-      requestSpec.headers.set("Accept", "application/json")
-      requestSpec.body.text(JsonOutput.toJson(inputJson))
+    requestSpec { RequestSpec request ->
+      request.body.type("application/json")
+      request.headers.set("Accept", "application/json")
+      request.body.text(JsonOutput.toJson(inputJson))
     }
     def httpResp = post("api/invoke")
 
